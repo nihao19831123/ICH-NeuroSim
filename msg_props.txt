@@ -1,0 +1,26 @@
+﻿{
+    "content":  "ææ²¡ææ¼ç¤ºè§é¢ï¼",
+    "mime_type":  "text/plain",
+    "meta_data":  {
+                      "ori_query":  "ææ²¡ææ¼ç¤ºè§é¢ï¼",
+                      "is_user_input":  "1",
+                      "is_default_query":  "0"
+                  }
+}
+{
+    "mime_type":  "signal/post",
+    "status":  "complete",
+    "meta_data":  {
+                      "operation_types":  [
+                                              [
+                                                  "regenerate"
+                                              ]
+                                          ],
+                      "intent_content":  "èµæºæç´¢-è§é¢",
+                      "intent_data":  "{\"agent_info\":{\"agent\":\"AgentProxy\",\"hit_vlm\":false,\"image_request\":\"0\",\"intent_request\":\"1\",\"judge_type\":\"normal_judge\",\"scene\":\"agentic_search\",\"sub_scene\":\"\"},\"agentic_intent\":{\"content\":\"èµæºæç´¢-è§é¢\"},\"banner_intent\":{\"need_trigger\":false},\"black_intent\":{\"black_list\":[{\"black_result\":{\"scene\":\"ai_track\",\"sub_scene\":\"\"},\"fallback_result\":{\"scene\":\"qwen_quick\",\"sub_scene\":\"\"}},{\"black_result\":{\"scene\":\"claw\",\"sub_scene\":\"\"},\"fallback_result\":{\"scene\":\"qwen_quick\",\"sub_scene\":\"\"}}]},\"brand_avatar_intent\":{},\"comment_intent\":{\"content\":\"\"},\"confidence_intent\":{\"content\":\"\",\"document\":false,\"has_active_message\":true,\"origin_topic\":false,\"top_logprobs\":{},\"topic\":true,\"topic_from_history\":false},\"difficulty_intent\":{\"content\":\"è¦æ±æä¾ç¹å®è½¯ä»¶çæ¼ç¤ºè§é¢ï¼å±äºå¸¸è§èµæºæ£ç´¢ä¸åºç¡æ ¼å¼è½¬æ¢ï¼æ å¤æçº¦æï¼ç¬¦åL2ã\u003c/think\u003e\\nL2\",\"label\":\"L2\"},\"ef_correct_intent\":{\"category\":\"\",\"content\":\"\",\"platform\":\"\"},\"ef_intent\":{\"content\":\"èµæºæç´¢-è§é¢\",\"llm_error_code\":0,\"llm_error_msg\":\"\",\"origin_content\":\"\"},\"explicit_intent\":{\"explicit_memory\":false},\"hotspot_intent\":{\"judge_content\":\"{\\\"target\\\":\\\"3D Slicer\\\",\\\"evidence\\\":\\\"ç´ æä»\u0085æä¾ä½¿ç¨æç¨ï¼æªæ¥éè¯¥è½¯ä»¶æå\u0085·ä½æ´æ°ã\\\",\\\"has_recent_update\\\":false}\",\"material_stat\":{\"per_query\":[{\"count\":20,\"query\":\"3D Slicer è¿ææ´æ°\"},{\"count\":20,\"query\":\"SINA è¿ææ´æ°\"}],\"sent_to_model\":5,\"total\":40},\"rewrite_content\":\"[\\\"3D Slicer è¿ææ´æ°\\\", \\\"SINA è¿ææ´æ°\\\"]\",\"status\":\"ok\"},\"hardware_intent\":{\"is_hardware_related\":false,\"is_hw_connected\":false,\"reply_mode\":\"\"},\"find_skill_intent\":{\"agents\":[],\"skills\":[]},\"follow_up_intent\":{\"content\":\"\"},\"forward_intent\":{\"blocked\":true,\"content\":\"\"},\"gao_kao_intent\":{\"content\":\"å\u0085¶ä»\"},\"intentResults\":{\"ef_intent\":\"èµæºæç´¢-è§é¢\",\"vqa_image_name\":\"å¼å¸¸\",\"vqa_ext_intent\":\"å¼å¸¸\",\"agentic_intent\":\"èµæºæç´¢-è§é¢\",\"writer_intent\":\"\",\"uvl_intent\":\"èµæºæç´¢-è§é¢\"},\"makeup_intent\":{\"is_full_intent\":false,\"result\":{}},\"rag_intent\":{\"content\":\"\",\"need_rag\":true},\"search_intent\":{\"content\":\"æ¥æ¾åºåºèåºè¡è¿æ¨¡æçè§é¢æç¨ï¼å±é«æ¶ææ§èµæºæ£ç´¢ï¼éæç´¢ã\u003c/think\u003e\\nT0|D3|èµæºæ£ç´¢\",\"is_search\":true,\"is_simple\":false,\"label\":\"T0|D3|èµæºæ£ç´¢\"},\"skill_intent\":{\"content\":\"èµæºæç´¢-è§é¢\",\"intent_classify_content\":\"è¯¢é®æ¼ç¤ºè§é¢èµæºï¼ç®æ æ¯è·åç¸å\u0085³è§é¢èéç¥è¯è§£é\u003c/think\u003eèµæºæç´¢-è§é¢\",\"llm_error_code\":0,\"llm_error_msg\":\"request process success!\",\"model_name\":\"quarkchat-skill-intent-b\",\"skill_list\":[\"search_skill\",\"general_skill\"],\"skill_retrieve_content\":\"search_skill,general_skill\"},\"task_intent\":{},\"tp_intent\":{\"third_party_scene\":\"\",\"trigger_third_party\":false},\"tusou_intent\":{\"img_category\":0,\"intent\":0,\"round_index\":-1,\"session_id\":0},\"txt_intent\":{},\"universe_skill_intent\":{\"content\":\"\",\"is_universe_skill\":false,\"skill_name\":\"\",\"skill_slug\":\"\"},\"uvl_intent\":{\"content\":\"èµæºæç´¢-è§é¢\",\"llm_error_code\":0,\"llm_error_msg\":\"\",\"model_name\":\"quarkchat-skill-intent-b\"},\"vl_intent\":{},\"vqa_ext_intent\":{\"image_cls\":\"-1\",\"image_name\":\"å¼å¸¸\",\"intent_cls\":\"-1\",\"intent_name\":\"å¼å¸¸\",\"intent_signal\":\"0\"},\"writer_intent\":{\"content\":\"\"}}",
+                      "ori_query":  "ææ²¡ææ¼ç¤ºè§é¢ï¼",
+                      "generate_mode":  "stream",
+                      "agent_mode":  "0",
+                      "scene":  "agentic_search"
+                  }
+}

@@ -1,0 +1,8 @@
+﻿=== REQUEST MESSAGES ===
+ROLE:  | TYPE: 
+
+=== RESPONSE MESSAGES ===
+ROLE:  | TYPE: 
+ROLE:  | TYPE: 
+ROLE:  | TYPE: 
+ROLE:  | TYPE: 

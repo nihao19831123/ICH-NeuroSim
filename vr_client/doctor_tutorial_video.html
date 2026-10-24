@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ICH-NeuroSim 神经外科医生系统使用与临床应用教学视频</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(1000%); } }
+    .scanline-effect { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.8), transparent); animation: scanline 4s linear infinite; }
+    .glass-ui { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.12); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.3); border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans select-none antialiased">
+
+  <!-- 顶部状态栏与核心控制 -->
+  <header class="border-b border-slate-800 bg-slate-900/90 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-3.5">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 text-white font-bold text-sm">
+        DOC
+      </div>
+      <div>
+        <h1 class="text-sm md:text-base font-bold text-white tracking-wide flex items-center gap-2">
+          <span>ICH-NeuroSim 医生操作与临床应用教学视频</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold font-mono">
+            患者: 潘善珍 20251118000395 (33.29 mL)
+          </span>
+        </h1>
+        <p class="text-xs text-slate-400">
+          基于 3D Slicer 规范、MONAI 深度学习、DTI 神经束避障与原生 VR 触觉反馈的全流程临床规培系统
+        </p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <!-- 微信专用 MP4 导出按键 -->
+      <button id="recordMp4Btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white transition shadow-md shadow-emerald-600/30 border border-emerald-400/40">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8.5 13.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm7 0a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm3.5-5.5C19 3.6 15.4 1 11 1 6.6 1 3 3.6 3 8c0 2.4 1.1 4.6 2.9 6.1L5 18l4.1-1.4c.6.2 1.3.4 1.9.4 4.4 0 8-2.6 8-6zm2.5 4.5c0-.3 0-.7-.1-1-.2 2.2-2.3 4-5 4-.6 0-1.1-.1-1.6-.2l-2.8 1 1-2.4c-1.4-1-2.2-2.3-2.2-3.8 0-.2 0-.4.1-.6-.2 0-.4-.1-.5-.1-3.6 0-6.5-2.2-6.5-5s2.9-5 6.5-5c3.6 0 6.5 2.2 6.5 5 0 .2 0 .4-.1.6 2.6.4 4.7 2.3 4.7 4.5z"/></svg>
+        <span id="recordMp4Text">📱 导出微信专用视频 (.mp4)</span>
+      </button>
+
+      <!-- WebM 录制导出按键 -->
+      <button id="recordVideoBtn" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700">
+        <svg id="recordIcon" class="w-3.5 h-3.5 text-rose-400" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>
+        <span id="recordText">🎬 WebM 录制</span>
+      </button>
+
+      <!-- 微信手机扫码分享 -->
+      <a href="wechat_share.html" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 transition border border-emerald-500/50 shadow-md">
+        <span>📲 微信扫码即看</span>
+      </a>
+
+      <!-- 语音解说开关 -->
+      <button id="voiceToggleBtn" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition">
+        <svg id="voiceIcon" class="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+        </svg>
+        <span id="voiceText">AI语音</span>
+      </button>
+
+      <!-- 返回工作台主界面 -->
+      <a href="/" class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition shadow-md shadow-blue-600/30">
+        <span>🔙 规划台</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- 主操作视窗与侧边医学指南 -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- 视频主视窗区域 (占 8 列) -->
+    <div class="lg:col-span-8 flex flex-col gap-3">
+      
+      <!-- 视窗播放模式切换与规格提示 -->
+      <div class="flex items-center justify-between text-xs px-1">
+        <div class="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+          <button id="modeSimBtn" class="px-3 py-1 rounded-lg bg-blue-600 text-white font-bold transition flex items-center gap-1.5">
+            <span>🎮 3D 实时仿真交互</span>
+          </button>
+          <button id="modeVideoBtn" class="px-3 py-1 rounded-lg bg-transparent text-slate-400 hover:text-white font-medium transition flex items-center gap-1.5">
+            <span>📹 原生视频播放器 (.webm)</span>
+          </button>
+        </div>
+        <div class="text-[11px] text-slate-400 flex items-center gap-2 font-mono">
+          <span>画质: <b class="text-cyan-400">1080p 60FPS</b></span>
+          <span>|</span>
+          <span>旁白: <b class="text-emerald-400">AI 智能发音</b></span>
+        </div>
+      </div>
+
+      <!-- 视频画面容器 -->
+      <div class="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col justify-between">
+        
+        <!-- 3D仿真三维演示画布 (1280x720 原生渲染) -->
+        <canvas id="simCanvas" width="1280" height="720" class="absolute inset-0 w-full h-full cursor-pointer"></canvas>
+        <div class="scanline-effect pointer-events-none"></div>
+
+        <!-- 原生 WebM 视频播放器 (Mode B) -->
+        <video id="nativeVideo" src="ICH_Doctor_Tutorial_Video.webm" class="absolute inset-0 w-full h-full object-contain bg-black hidden z-10" controls></video>
+
+        <!-- 首次播放手势授权遮罩引导 (解决现代浏览器自动播放声音拦截问题) -->
+        <div id="playOverlay" class="absolute inset-0 z-30 bg-black/65 backdrop-blur-[2px] flex flex-col items-center justify-center cursor-pointer transition-opacity duration-300">
+          <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 text-white flex items-center justify-center shadow-2xl border-2 border-white/50 transform hover:scale-110 transition animate-pulse">
+            <svg class="w-10 h-10 ml-1.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+          <p class="text-white font-bold text-base mt-4 tracking-wide drop-shadow-lg">▶ 点击开始播放教学演示与 AI 语音解说</p>
+          <p class="text-slate-300 text-xs mt-1.5 drop-shadow">患者 潘善珍 (20251118000395) · 7 大临床规划步骤 · 1080p 实时三维交互</p>
+        </div>
+
+        <!-- 画面左上角：当前场景章节标签与渲染帧率 -->
+        <div class="relative z-10 m-4 flex items-center gap-2 pointer-events-none">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-900/85 border border-cyan-500/50 text-cyan-300 backdrop-blur shadow-lg">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+            <span id="sceneTag">第 1 章：真实患者影像载入与多模态体素三维重构</span>
+          </span>
+          <span id="fpsTag" class="text-[10px] font-mono text-slate-300 bg-black/70 px-2 py-0.5 rounded border border-white/10">
+            60 FPS | 1080p
+          </span>
+        </div>
+
+        <!-- 画面右上角：虚拟内镜画中画 (PIP View) -->
+        <div id="endoscopePip" class="absolute top-4 right-4 z-20 w-40 h-40 rounded-xl overflow-hidden border-2 border-cyan-500/60 shadow-xl bg-slate-950/90 hidden flex-col">
+          <div class="bg-cyan-950/90 px-2.5 py-1 text-[10px] font-bold text-cyan-300 flex items-center justify-between border-b border-cyan-500/30">
+            <span>鞘管内镜前视 (PIP)</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+          </div>
+          <div class="relative flex-1 bg-black flex items-center justify-center p-2">
+            <canvas id="pipCanvas" width="160" height="160" class="w-full h-full rounded-full border border-cyan-400/40"></canvas>
+            <span class="absolute bottom-1 right-2 text-[9px] text-slate-400 font-mono">FOV 110°</span>
+          </div>
+        </div>
+
+        <!-- 警报指示横条 (触碰运动神经红线时弹出) -->
+        <div id="dangerBanner" class="absolute top-16 left-4 right-4 z-20 bg-red-950/95 border-2 border-red-500 rounded-xl p-3 flex items-center justify-between text-red-100 text-xs font-bold backdrop-blur transform -translate-y-4 opacity-0 transition-all duration-300 pointer-events-none shadow-2xl">
+          <div class="flex items-center gap-2.5">
+            <svg class="w-5 h-5 text-red-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>触觉警告：当前穿刺轨迹侵犯运动传导束（CST 间隙 &lt; 3.0mm），触发系统硬拦截！</span>
+          </div>
+          <span class="bg-red-600 text-white text-[10px] px-2.5 py-1 rounded font-bold uppercase tracking-wider animate-pulse">
+            轨迹拦截
+          </span>
+        </div>
+
+        <!-- 画面底部：字幕与旁白栏 -->
+        <div class="relative z-10 p-4 bg-gradient-to-t from-black/95 via-black/85 to-transparent">
+          <div class="flex items-start gap-3">
+            <div class="px-2 py-0.5 rounded bg-blue-600 text-white text-[10px] font-bold shrink-0 mt-0.5 shadow-md">
+              医生解说
+            </div>
+            <p id="subtitles" class="text-xs md:text-sm font-medium text-slate-100 leading-relaxed drop-shadow">
+              正在初始化神经外科手术教学系统...
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 视频播放器控制条 -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-2 shadow-xl">
+        <!-- 进度条 -->
+        <div class="relative w-full h-2 bg-slate-800 rounded-full cursor-pointer group" id="progressBarContainer">
+          <div id="progressBar" class="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full w-0 transition-all duration-100"></div>
+          <!-- 关键章节节点标记点 -->
+          <div class="absolute top-1/2 -translate-y-1/2 left-[0%] w-2 h-2 rounded-full bg-white/50" title="第1章"></div>
+          <div class="absolute top-1/2 -translate-y-1/2 left-[14%] w-2 h-2 rounded-full bg-white/50" title="第2章"></div>
+          <div class="absolute top-1/2 -translate-y-1/2 left-[28%] w-2 h-2 rounded-full bg-white/50" title="第3章"></div>
+          <div class="absolute top-1/2 -translate-y-1/2 left-[43%] w-2 h-2 rounded-full bg-white/50" title="第4章"></div>
+          <div class="absolute top-1/2 -translate-y-1/2 left-[59%] w-2 h-2 rounded-full bg-white/50" title="第5章"></div>
+          <div class="absolute top-1/2 -translate-y-1/2 left-[73%] w-2 h-2 rounded-full bg-white/50" title="第6章"></div>
+          <div class="absolute top-1/2 -translate-y-1/2 left-[87%] w-2 h-2 rounded-full bg-white/50" title="第7章"></div>
+        </div>
+
+        <!-- 控制按键行 -->
+        <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center gap-3">
+            <!-- 播放/暂停 -->
+            <button id="playPauseBtn" class="w-9 h-9 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition shadow-md shadow-blue-600/30">
+              <svg id="playIcon" class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <svg id="pauseIcon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <!-- 重新播放 -->
+            <button id="replayBtn" class="p-2 text-slate-400 hover:text-white transition" title="从头重播">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+            <span class="text-xs text-slate-400 font-mono">
+              <span id="currTime" class="text-cyan-400 font-bold">00:00</span> / <span id="totalTime">03:30</span>
+            </span>
+          </div>
+
+          <!-- 7 个章节快速跳转按键 -->
+          <div class="flex items-center gap-1 overflow-x-auto">
+            <button class="chapter-btn px-2 py-1 text-[11px] rounded bg-blue-600 text-white font-semibold" data-time="0">1.解剖重构</button>
+            <button class="chapter-btn px-2 py-1 text-[11px] rounded bg-slate-800 text-slate-300 hover:bg-slate-700" data-time="30">2.AI黑洞征</button>
+            <button class="chapter-btn px-2 py-1 text-[11px] rounded bg-slate-800 text-slate-300 hover:bg-slate-700" data-time="60">3.DTI避障</button>
+            <button class="chapter-btn px-2 py-1 text-[11px] rounded bg-slate-800 text-slate-300 hover:bg-slate-700" data-time="90">4.Slicer入路</button>
+            <button class="chapter-btn px-2 py-1 text-[11px] rounded bg-slate-800 text-slate-300 hover:bg-slate-700" data-time="125">5.导板&AR</button>
+            <button class="chapter-btn px-2 py-1 text-[11px] rounded bg-slate-800 text-slate-300 hover:bg-slate-700" data-time="155">6.VR&落空</button>
+            <button class="chapter-btn px-2 py-1 text-[11px] rounded bg-slate-800 text-slate-300 hover:bg-slate-700" data-time="185">7.导航推流</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 侧边信息栏：医生操作步骤指引与关键循证 (占 4 列) -->
+    <div class="lg:col-span-4 flex flex-col gap-4">
+      
+      <!-- 卡片一：当前步骤“怎么用”操作规程 -->
+      <div class="glass-ui rounded-2xl p-4 border border-slate-800 flex flex-col gap-2">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+          <h2 class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            医生实操指引 (Clinical How-To)
+          </h2>
+          <span id="stepBadge" class="text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-800 px-2 py-0.5 rounded-full font-bold">第 1/7 步</span>
+        </div>
+        <div id="stepInstruction" class="text-xs text-slate-300 space-y-2 leading-relaxed">
+          <!-- 动态更新内容 -->
+        </div>
+      </div>
+
+      <!-- 卡片二：循证医学与神经外科决策标准 -->
+      <div class="glass-ui rounded-2xl p-4 border border-slate-800 flex-1 flex flex-col justify-between">
+        <div>
+          <h2 class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 pb-2 mb-3 border-b border-slate-800">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            神经外科决策依据 (Evidence & Rules)
+          </h2>
+          
+          <div class="space-y-2.5 text-xs">
+            <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+              <div class="flex justify-between font-semibold text-slate-200 mb-0.5">
+                <span class="text-cyan-400">ENRICH (2024 NEJM) 标准</span>
+                <span class="text-emerald-400">&gt; 30 mL 强指征</span>
+              </div>
+              <p class="text-[11px] text-slate-400">基底节/内囊区血肿超过 30mL 且合并中线移位，微创穿束手术相比传统保守治疗可显著改善 180 天 mRS 评分。</p>
+            </div>
+
+            <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+              <div class="flex justify-between font-semibold text-slate-200 mb-0.5">
+                <span class="text-yellow-400">CST 运动束 3.0 mm 红线</span>
+                <span class="text-emerald-400">间隙 5.85 mm</span>
+              </div>
+              <p class="text-[11px] text-slate-400">顺应额中沟自然间隙穿刺，杜绝盲目穿越内囊后肢，坚决保护患者偏瘫肢体的运动神经功能。</p>
+            </div>
+
+            <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+              <div class="flex justify-between font-semibold text-slate-200 mb-0.5">
+                <span class="text-pink-400">硬脑膜落空感 (Pop) 校验</span>
+                <span class="text-emerald-400">阻力降幅 85%</span>
+              </div>
+              <p class="text-[11px] text-slate-400">触觉力学引擎模拟硬脑膜 5.4 N 刺破瞬间骤降至 0.8 N，帮助主刀医生掌握突破手感与深度限位。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+          <span>受测患者：潘善珍 (74岁/女)</span>
+          <span class="text-cyan-400 font-mono font-bold">ID: 20251118000395</span>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- 脚本逻辑：教学时间轴、Canvas 模拟渲染、语音合成与 WebM 录制导出 -->
+  <script>
+    // 教学章节时间轴 (总时长 210 秒 / 03:30)
+    const tutorialChapters = [
+      {
+        start: 0,
+        end: 30,
+        title: "第 1 章：多模态 CT 影像导入与三维解剖孪生构建",
+        badge: "步骤 1/7",
+        featureTitle: "多模态影像三维重建 (3D Reconstruction)",
+        scenarioTitle: "急诊快速接诊 · 真实空间解剖定位",
+        stepTitle: "多模态 CT 影像导入与三维解剖孪生构建",
+        instruction: `
+          <div class="space-y-1.5">
+            <div class="p-2 rounded bg-cyan-950/60 border border-cyan-800/60 text-[11px]">
+              <span class="text-cyan-400 font-bold">🛠️ 核心功能：</span>
+              <span class="text-slate-200">全自动解析骨窗 (402) 与软组织窗 (401)，体素级提取 202,140 面真实颅骨与 11,944 面血肿网格，实现 2D 原生切片与 3D 视角毫秒级联动对齐。</span>
+            </div>
+            <div class="p-2 rounded bg-emerald-950/60 border border-emerald-800/60 text-[11px]">
+              <span class="text-emerald-400 font-bold">🏥 临床应用场景：</span>
+              <span class="text-slate-200">急性脑出血急诊抢救（黄金 3 小时）。医生无需手动勾画，30 秒内获得患者全景三维脑解剖孪生，快速评估病灶位置与脑疝风险。</span>
+            </div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800 text-[11px]">
+              <span class="text-amber-400 font-bold">👨‍⚕️ 软件实操指南：</span>
+              <span class="text-slate-300">① 点击左侧【📁 导入 DICOM 影像】；② 拖动【切片层级滑块】查看 Z=1406.5~1536.5mm 横截面；③ 鼠标拖拽 3D 视窗 360° 旋转观察右基底节区。</span>
+            </div>
+          </div>
+        `,
+        narration: "欢迎使用脑出血微创手术规划系统。在急诊接诊场景下，医生点击导入DICOM序列，系统秒级解析骨窗与脑窗，自动重构20万面高保真颅骨与真实血肿空间模型，实现二维切片与三维孪生实时联动。"
+      },
+      {
+        start: 30,
+        end: 60,
+        title: "第 2 章：MONAI 深度学习病灶量化与黑洞征/扩大风险排查",
+        badge: "步骤 2/7",
+        featureTitle: "AI 智能影像组学分析 (AI Quantification)",
+        scenarioTitle: "神经重症风险分层 · 手术指征确认 (ENRICH)",
+        stepTitle: "AI 影像组学活动性出血与再扩大风险筛查",
+        instruction: `
+          <div class="space-y-1.5">
+            <div class="p-2 rounded bg-cyan-950/60 border border-cyan-800/60 text-[11px]">
+              <span class="text-cyan-400 font-bold">🛠️ 核心功能：</span>
+              <span class="text-slate-200">MONAI 3D SegResNet 5 分类全自动推理，血肿 Dice 达 0.924；自动扫描病灶内低密度区，检出黑洞征 (Black Hole Sign) 密度异质性。</span>
+            </div>
+            <div class="p-2 rounded bg-emerald-950/60 border border-emerald-800/60 text-[11px]">
+              <span class="text-emerald-400 font-bold">🏥 临床应用场景：</span>
+              <span class="text-slate-200">患者潘善珍血肿量 33.29 mL，中线移位 4.2mm，达到 NEJM ENRICH 标准微创手术强指征；黑洞征阳性提示活动性渗血，24h 扩大风险高达 76%，必须紧急手术。</span>
+            </div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800 text-[11px]">
+              <span class="text-amber-400 font-bold">👨‍⚕️ 软件实操指南：</span>
+              <span class="text-slate-300">① 查看右侧【🧠 AI 量化看板】；② 确认血肿 33.29 mL、水肿 21.4 mL；③ 点击【活动性出血筛查】，查看 18 HU 黑洞征报警与 76% 扩大风险。</span>
+            </div>
+          </div>
+        `,
+        narration: "第二步，系统调用MONAI深度学习引擎，精准分割血肿并计算体积为33.29毫升，中线向左移位4.2毫米，达到ENRICH手术强指征。AI组学检出黑洞征阳性，提示内部存在活动性渗血，24小时扩大风险高达76%，必须紧急实施微创清除。"
+      },
+      {
+        start: 60,
+        end: 90,
+        title: "第 3 章：DTI 皮质脊髓束 (CST) 空间配准与安全红线避障",
+        badge: "步骤 3/7",
+        featureTitle: "白质传导束追踪与避障 (DTI Tractography)",
+        scenarioTitle: "术前入路安全论证 · 保护偏瘫肢体运动功能",
+        stepTitle: "白质运动传导束三维追踪与 3.0mm 红线校验",
+        instruction: `
+          <div class="space-y-1.5">
+            <div class="p-2 rounded bg-cyan-950/60 border border-cyan-800/60 text-[11px]">
+              <span class="text-cyan-400 font-bold">🛠️ 核心功能：</span>
+              <span class="text-slate-200">DTI 弥散张量算法重建 13 根皮质脊髓束 (CST) 金色流线管腔，实时计算穿刺鞘管外壁与 CST 之间的欧氏最短距离。</span>
+            </div>
+            <div class="p-2 rounded bg-emerald-950/60 border border-emerald-800/60 text-[11px]">
+              <span class="text-emerald-400 font-bold">🏥 临床应用场景：</span>
+              <span class="text-slate-200">传统穿刺易盲目切断内囊后肢运动神经造成永久瘫痪。本系统严格执行 ≥3.0 mm 安全红线，确保穿刺套管顺应额中沟间隙，杜绝神经医源性损伤。</span>
+            </div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800 text-[11px]">
+              <span class="text-amber-400 font-bold">👨‍⚕️ 软件实操指南：</span>
+              <span class="text-slate-300">① 开启 3D 视图【⚡ CST 白质束】；② 查看动态距离标尺（当前 5.85 mm，放行）；③ 点击【危险逼近测试】，体验逼近至 1.15 mm 时的全屏声光硬拦截。</span>
+            </div>
+          </div>
+        `,
+        narration: "第三步，在术前入路规划场景中，系统加载DTI弥散张量纤维束，重建13根金色皮质脊髓束。系统严格执行3毫米红线安全距离。当前额叶入路间隙为5.85毫米；若穿刺轨迹侵犯运动神经，系统将自动触发硬碰撞拦截，杜绝术后偏瘫加重。"
+      },
+      {
+        start: 90,
+        end: 125,
+        title: "第 4 章：3D Slicer 规范路径规划与 Draw Tube 工作通道",
+        badge: "步骤 4/7",
+        featureTitle: "立体定向入路设计 (Surgical Trajectory Planning)",
+        scenarioTitle: "额叶 Kocher 点微创穿刺 · 鞘管管径与内镜视野选择",
+        stepTitle: "额叶 Kocher 点微创穿束入路与鞘管管径选择",
+        instruction: `
+          <div class="space-y-1.5">
+            <div class="p-2 rounded bg-cyan-950/60 border border-cyan-800/60 text-[11px]">
+              <span class="text-cyan-400 font-bold">🛠️ 核心功能：</span>
+              <span class="text-slate-200">全面对接 3D Slicer 国际神经外科标准，多轴 Gyro Guide 实时解算发际内 Kocher 点坐标、靶点深度 61.2mm、矢状角 19.4° 与冠状角 22.8°。</span>
+            </div>
+            <div class="p-2 rounded bg-emerald-950/60 border border-emerald-800/60 text-[11px]">
+              <span class="text-emerald-400 font-bold">🏥 临床应用场景：</span>
+              <span class="text-slate-200">根据患者血肿黏稠度灵活选择器械通道：简单血凝块选 ø3.2mm 穿刺引流针；复杂多房血块选 ø12.0mm BrainPath 透明神经内镜鞘管（110° 画中画视野）。</span>
+            </div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800 text-[11px]">
+              <span class="text-amber-400 font-bold">👨‍⚕️ 软件实操指南：</span>
+              <span class="text-slate-300">① 在 3D 颅骨上微调发际内 Kocher 入点；② 在控制台选择【Draw Tube 管径】(3.2mm / 12mm)；③ 观察右上角【PIP 神经内镜画中画】预览术野。</span>
+            </div>
+          </div>
+        `,
+        narration: "第四步，入路规划模块严格对接3D Slicer标准，锁定右额发际内Kocher点，计算出穿刺深度61.2毫米、矢状倾角19.4度。医生可在3.2毫米引流针与12毫米BrainPath内镜鞘管间一键切换，并通过画中画预览内镜腔内操作视野。"
+      },
+      {
+        start: 125,
+        end: 155,
+        title: "第 5 章：3D 打印导板 (STL) 导出与 SINA AR 手机床旁投射",
+        badge: "步骤 5/7",
+        featureTitle: "个体化 3D 打印导板与 AR 投射 (Guide STL & AR)",
+        scenarioTitle: "基层无大型导航医院 · 急诊床旁低成本亚毫米级穿刺",
+        stepTitle: "个体化颅骨贴合导板制造与手机增强现实对准",
+        instruction: `
+          <div class="space-y-1.5">
+            <div class="p-2 rounded bg-cyan-950/60 border border-cyan-800/60 text-[11px]">
+              <span class="text-cyan-400 font-bold">🛠️ 核心功能：</span>
+              <span class="text-slate-200">自动提取患者额骨表面曲率，布尔差分生成完美贴合的穿刺导向柱与固定翼，一键导出水密 STL 文件；支持手机 WebXR/SINA AR 后置相机特征点配准。</span>
+            </div>
+            <div class="p-2 rounded bg-emerald-950/60 border border-emerald-800/60 text-[11px]">
+              <span class="text-emerald-400 font-bold">🏥 临床应用场景：</span>
+              <span class="text-slate-200">针对无百万级手术导航仪的县市级基层医院，采用 3D 打印导板（成本不足百元）或普通智能手机 AR 投射，即可实现亚毫米级精准穿刺。</span>
+            </div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800 text-[11px]">
+              <span class="text-amber-400 font-bold">👨‍⚕️ 软件实操指南：</span>
+              <span class="text-slate-300">① 点击【🖨️ 导出 3D 导板 STL】，设置导管外径 12.0 mm 并保存；② 或点击【📱 SINA AR】，手机对准患者眉心与耳眶线进行实时全息透视。</span>
+            </div>
+          </div>
+        `,
+        narration: "第五步，针对没有大型导航仪的基层医院或急诊场景，系统可一键生成患者颅骨贴合的3D打印穿刺导板STL文件；同时支持SINA AR功能，医生仅用一部智能手机对准患者眉心，即可在病床旁实现亚毫米级增强现实透视定位。"
+      },
+      {
+        start: 155,
+        end: 185,
+        title: "第 6 章：原生 VR 沉浸式演练与 5 层生物力学触觉反馈",
+        badge: "步骤 6/7",
+        featureTitle: "原生 VR 沉浸演练与触觉力反馈 (Haptic VR Engine)",
+        scenarioTitle: "年轻医生/规培生技能培训 · 掌握硬脑膜落空感 (Pop)",
+        stepTitle: "6DoF 空间手势追踪与硬脑膜刺破落空感 (Pop) 模拟",
+        instruction: `
+          <div class="space-y-1.5">
+            <div class="p-2 rounded bg-cyan-950/60 border border-cyan-800/60 text-[11px]">
+              <span class="text-cyan-400 font-bold">🛠️ 核心功能：</span>
+              <span class="text-slate-200">独立原生 C++ 触觉物理引擎（1000 Hz 伺服循环），拟合头皮弹性、颅骨研磨高频振动、硬脑膜刺破阻力骤降 85%（5.4N -> 0.8N）等 5 层解剖力学。</span>
+            </div>
+            <div class="p-2 rounded bg-emerald-950/60 border border-emerald-800/60 text-[11px]">
+              <span class="text-emerald-400 font-bold">🏥 临床应用场景：</span>
+              <span class="text-slate-200">年轻住院医师上台前必须掌握穿透硬脑膜瞬间的“落空感”，防止因盲目用力过猛刺入深部正常脑组织导致灾难性二次损伤。</span>
+            </div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800 text-[11px]">
+              <span class="text-amber-400 font-bold">👨‍⚕️ 软件实操指南：</span>
+              <span class="text-slate-300">① 点击【🎮 原生 VR & 触觉引擎】下载运行独立客户端；② 佩戴 VR 头显或力反馈手柄进针；③ 观察触觉曲线图，感受硬脑膜刺破瞬间 85% 阻力断崖式下降。</span>
+            </div>
+          </div>
+        `,
+        narration: "第六步，针对年轻医生规培与复杂病例术前演练，系统搭载5层生物力学触觉引擎。高精度还原颅骨切削的高频振颤，以及硬脑膜被刺破瞬间阻力骤降85%的真实落空感，帮助医生提前建立肌肉记忆，掌握进针突破限位。"
+      },
+      {
+        start: 185,
+        end: 210,
+        title: "第 7 章：手术室 OpenIGTLink 导航仪推流与全套手术方案导出",
+        badge: "步骤 7/7",
+        featureTitle: "数字化手术室协同与方案导出 (OR Interoperability)",
+        scenarioTitle: "机械臂导航实时协同 · 术前三方核查签字与质控归档",
+        stepTitle: "手术室机械臂坐标广播与合规临床专案文档导出",
+        instruction: `
+          <div class="space-y-1.5">
+            <div class="p-2 rounded bg-cyan-950/60 border border-cyan-800/60 text-[11px]">
+              <span class="text-cyan-400 font-bold">🛠️ 核心功能：</span>
+              <span class="text-slate-200">遵循 OpenIGTLink v3 协议，将入颅靶点与 4x4 变换矩阵打包为 58 字节标准网络帧广播至手术室机械臂；生成符合 IEC 62304 标准的完整临床手术专案书 (PDF)。</span>
+            </div>
+            <div class="p-2 rounded bg-emerald-950/60 border border-emerald-800/60 text-[11px]">
+              <span class="text-emerald-400 font-bold">🏥 临床应用场景：</span>
+              <span class="text-slate-200">术前三方核查（主刀/麻醉/巡回护士）签名确认，全套多模态量化、穿刺入路图纸、耗材清单一键打印，满足三甲医院严苛质控归档要求。</span>
+            </div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800 text-[11px]">
+              <span class="text-amber-400 font-bold">👨‍⚕️ 软件实操指南：</span>
+              <span class="text-slate-300">① 点击【OpenIGTLink 广播】建立 TCP 18944 机械臂推流通道；② 点击【📋 导出手术准备方案】生成临床专案书；③ 打印并签署微创穿刺手术确认单。</span>
+            </div>
+          </div>
+        `,
+        narration: "第七步，手术室协同场景下，规划数据通过OpenIGTLink协议实时推送至机械臂导航仪。点击导出手术方案，一键生成包含患者病史、多模态量化、穿刺参数及耗材清单的标准临床专案书，用于术前核查签字与合规归档。全套系统通过135项自动化测试验收！"
+      }
+    ];
+
+    // URL 参数解析
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // 全局控制变量
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const pipCanvas = document.getElementById('pipCanvas');
+    const pipCtx = pipCanvas.getContext('2d');
+
+    let currentTime = 0;
+    const totalDuration = 210; // 03:30
+    let isPlaying = true;
+    let voiceEnabled = true;
+    let lastChapterIndex = -1;
+    let animFrameId = null;
+
+    // UI 元素
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const playIcon = document.getElementById('playIcon');
+    const pauseIcon = document.getElementById('pauseIcon');
+    const replayBtn = document.getElementById('replayBtn');
+    const currTimeElem = document.getElementById('currTime');
+    const totalTimeElem = document.getElementById('totalTime');
+    const progressBar = document.getElementById('progressBar');
+    const progressBarContainer = document.getElementById('progressBarContainer');
+    const sceneTag = document.getElementById('sceneTag');
+    const subtitlesElem = document.getElementById('subtitles');
+    const stepBadge = document.getElementById('stepBadge');
+    const stepInstruction = document.getElementById('stepInstruction');
+    const dangerBanner = document.getElementById('dangerBanner');
+    const endoscopePip = document.getElementById('endoscopePip');
+    const voiceToggleBtn = document.getElementById('voiceToggleBtn');
+    const voiceText = document.getElementById('voiceText');
+    const voiceIcon = document.getElementById('voiceIcon');
+    const chapterBtns = document.querySelectorAll('.chapter-btn');
+    const recordVideoBtn = document.getElementById('recordVideoBtn');
+    const recordText = document.getElementById('recordText');
+    const modeSimBtn = document.getElementById('modeSimBtn');
+    const modeVideoBtn = document.getElementById('modeVideoBtn');
+    const nativeVideo = document.getElementById('nativeVideo');
+    const playOverlay = document.getElementById('playOverlay');
+
+    // 格式化时间字符串 (MM:SS)
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = Math.floor(sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    // 体验启动与手势激活
+    function startExperience() {
+      if (playOverlay) playOverlay.classList.add('hidden');
+      isPlaying = true;
+      updatePlayPauseUI();
+      speakCurrentNarration();
+    }
+
+    if (playOverlay) {
+      playOverlay.addEventListener('click', startExperience);
+    }
+
+    // 画布点击直接控制 播放/暂停
+    canvas.addEventListener('click', () => {
+      if (playOverlay && !playOverlay.classList.contains('hidden')) {
+        startExperience();
+      } else {
+        isPlaying = !isPlaying;
+        updatePlayPauseUI();
+        if (isPlaying) speakCurrentNarration();
+      }
+    });
+
+    // 播放/暂停控制
+    playPauseBtn.addEventListener('click', () => {
+      if (playOverlay && !playOverlay.classList.contains('hidden')) {
+        startExperience();
+      } else {
+        isPlaying = !isPlaying;
+        updatePlayPauseUI();
+        if (isPlaying) speakCurrentNarration();
+      }
+    });
+
+    replayBtn.addEventListener('click', () => {
+      currentTime = 0;
+      lastChapterIndex = -1;
+      isPlaying = true;
+      updatePlayPauseUI();
+      if (window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); } catch (e) {}
+      }
+      speakCurrentNarration();
+    });
+
+    function updatePlayPauseUI() {
+      if (isPlaying) {
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+      } else {
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+        if (window.speechSynthesis) {
+          try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
+      }
+    }
+
+    // 模式切换：3D 实时仿真 vs 原生视频流
+    if (modeSimBtn && modeVideoBtn && nativeVideo) {
+      modeSimBtn.addEventListener('click', () => {
+        modeSimBtn.className = "px-3 py-1 rounded-lg bg-blue-600 text-white font-bold transition flex items-center gap-1.5";
+        modeVideoBtn.className = "px-3 py-1 rounded-lg bg-transparent text-slate-400 hover:text-white font-medium transition flex items-center gap-1.5";
+        nativeVideo.classList.add('hidden');
+        try { nativeVideo.pause(); } catch (e) {}
+        canvas.classList.remove('hidden');
+        isPlaying = true;
+        updatePlayPauseUI();
+      });
+
+      modeVideoBtn.addEventListener('click', () => {
+        modeVideoBtn.className = "px-3 py-1 rounded-lg bg-blue-600 text-white font-bold transition flex items-center gap-1.5";
+        modeSimBtn.className = "px-3 py-1 rounded-lg bg-transparent text-slate-400 hover:text-white font-medium transition flex items-center gap-1.5";
+        if (playOverlay) playOverlay.classList.add('hidden');
+        canvas.classList.add('hidden');
+        nativeVideo.classList.remove('hidden');
+        isPlaying = false;
+        updatePlayPauseUI();
+        if (window.speechSynthesis) {
+          try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
+        nativeVideo.play().catch(e => console.log("Video auto play prevented", e));
+      });
+    }
+
+    // 章节快速跳转
+    chapterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const t = parseFloat(btn.dataset.time);
+        currentTime = t;
+        chapterBtns.forEach(b => b.className = "chapter-btn px-2 py-1 text-[11px] rounded bg-slate-800 text-slate-300 hover:bg-slate-700");
+        btn.className = "chapter-btn px-2 py-1 text-[11px] rounded bg-blue-600 text-white font-semibold";
+        if (window.speechSynthesis) {
+          try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
+      });
+    });
+
+    // 进度条拖动与点击
+    progressBarContainer.addEventListener('click', e => {
+      const rect = progressBarContainer.getBoundingClientRect();
+      const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      currentTime = pos * totalDuration;
+      if (window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); } catch (e) {}
+      }
+    });
+
+    // 语音解说开关
+    voiceToggleBtn.addEventListener('click', () => {
+      voiceEnabled = !voiceEnabled;
+      if (voiceEnabled) {
+        voiceText.textContent = "AI语音解说：开启";
+        voiceIcon.className = "w-4 h-4 text-cyan-400";
+        speakCurrentNarration();
+      } else {
+        voiceText.textContent = "AI语音解说：静音";
+        voiceIcon.className = "w-4 h-4 text-slate-500";
+        if (window.speechSynthesis) {
+          try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
+      }
+    });
+
+    function speakCurrentNarration() {
+      if (!voiceEnabled || !('speechSynthesis' in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        const ch = tutorialChapters[lastChapterIndex >= 0 ? lastChapterIndex : 0];
+        if (ch && ch.narration) {
+          const u = new SpeechSynthesisUtterance(ch.narration);
+          u.lang = 'zh-CN';
+          u.rate = 1.05;
+          u.pitch = 1.0;
+          window.speechSynthesis.speak(u);
+        }
+      } catch (err) {
+        console.warn("Speech synthesis non-fatal:", err);
+      }
+    }
+
+    // ==========================================
+    // 核心渲染循环：绘制 1080p 教学仿真画面
+    // ==========================================
+    let rotAngle = 0;
+
+    function renderSimulationFrame() {
+      // 画布清空 (深空暗色医学工作台背景)
+      ctx.fillStyle = "#020617";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 绘制深色空间坐标网格
+      ctx.strokeStyle = "rgba(30, 41, 59, 0.4)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < canvas.width; x += 64) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 64) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      // 获取当前章节
+      let chapterIdx = 0;
+      for (let i = 0; i < tutorialChapters.length; i++) {
+        if (currentTime >= tutorialChapters[i].start && currentTime < tutorialChapters[i].end) {
+          chapterIdx = i;
+          break;
+        }
+      }
+
+      const chapter = tutorialChapters[chapterIdx];
+
+      // 章节切换时触发语音与 UI 更新
+      if (chapterIdx !== lastChapterIndex) {
+        lastChapterIndex = chapterIdx;
+        sceneTag.textContent = chapter.title;
+        stepBadge.textContent = chapter.badge;
+        stepInstruction.innerHTML = chapter.instruction;
+        subtitlesElem.textContent = chapter.narration;
+        
+        // 更新章节按键高亮
+        chapterBtns.forEach((b, idx) => {
+          if (idx === chapterIdx) {
+            b.className = "chapter-btn px-2 py-1 text-[11px] rounded bg-blue-600 text-white font-semibold";
+          } else {
+            b.className = "chapter-btn px-2 py-1 text-[11px] rounded bg-slate-800 text-slate-300 hover:bg-slate-700";
+          }
+        });
+
+        // 针对特定章节控制 PIP 和警报
+        if (chapterIdx === 2) {
+          // CST 避障：演示警报触发
+          setTimeout(() => { dangerBanner.style.opacity = '1'; dangerBanner.style.transform = 'translateY(0)'; }, 8000);
+          setTimeout(() => { dangerBanner.style.opacity = '0'; dangerBanner.style.transform = 'translateY(-1rem)'; }, 14000);
+        } else {
+          dangerBanner.style.opacity = '0';
+          dangerBanner.style.transform = 'translateY(-1rem)';
+        }
+
+        if (chapterIdx === 3 || chapterIdx === 5) {
+          endoscopePip.classList.remove('hidden');
+          endoscopePip.classList.add('flex');
+        } else {
+          endoscopePip.classList.add('hidden');
+        }
+
+        speakCurrentNarration();
+      }
+
+      // 3D 头部旋转角度持续推进
+      rotAngle += 0.008;
+
+      // 绘制真实多模态数字化手术规划实操工作台界面与光标
+      drawWorkstationSimulation(chapterIdx, rotAngle);
+
+      // 更新时间戳与进度条
+      if (isPlaying) {
+        currentTime += 0.033; // 约 30 FPS
+        if (currentTime >= totalDuration) {
+          currentTime = 0;
+        }
+      }
+
+      currTimeElem.textContent = formatTime(currentTime);
+      const progressPercent = (currentTime / totalDuration) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+
+      animFrameId = requestAnimationFrame(renderSimulationFrame);
+    }
+
+    // ==========================================
+    // 核心渲染循环：绘制 1080p 真实软件实操工作台界面
+    // ==========================================
+    function drawWorkstationSimulation(chIdx, angle) {
+      const chapter = tutorialChapters[chIdx];
+      const timeInCh = currentTime - chapter.start;
+      const chDuration = chapter.end - chapter.start;
+      const tNorm = Math.min(1.0, Math.max(0, timeInCh / chDuration));
+
+      // 1. 顶栏：软件系统标题与患者建档信息
+      ctx.fillStyle = "#090d16";
+      ctx.fillRect(0, 0, canvas.width, 44);
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.25)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, 44); ctx.lineTo(canvas.width, 44); ctx.stroke();
+
+      // 系统 Logo 与产品名称
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 14px -apple-system, sans-serif";
+      ctx.fillText("🧠 ICH-NeuroSim 2.0 | 脑出血微创穿刺手术智能规划系统", 16, 27);
+
+      // 患者信息气泡
+      ctx.fillStyle = "rgba(30, 41, 59, 0.8)";
+      ctx.beginPath();
+      ctx.roundRect(470, 8, 490, 28, 6);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.3)";
+      ctx.stroke();
+
+      ctx.font = "11px monospace";
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillText("患者: 潘善珍 (PAN SHAN ZHEN) 74F | 影像号: 20251118000395 (uCT 710) | 骨窗/脑窗双序列", 482, 26);
+
+      // 运行状态与画质
+      ctx.fillStyle = "#10b981";
+      ctx.beginPath(); ctx.arc(980, 22, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "10px monospace";
+      ctx.fillText("医生实操教学录制 | 1080p 60FPS", 992, 25);
+
+      // -------------------------------------------------------------
+      // 2. 左侧视窗 (x: 12, y: 52, w: 270, h: 654)：2D CT 原生切片与 MONAI 标注
+      // -------------------------------------------------------------
+      const lx = 12, ly = 52, lw = 270, lh = 654;
+      ctx.fillStyle = "#0b0f19";
+      ctx.beginPath(); ctx.roundRect(lx, ly, lw, lh, 10); ctx.fill();
+      ctx.strokeStyle = "rgba(30, 41, 59, 0.8)"; ctx.stroke();
+
+      // 左视窗标题
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "bold 11px -apple-system, sans-serif";
+      ctx.fillText("2D 原生 CT 横断切片 (Axial MPR)", lx + 12, ly + 22);
+      ctx.font = "10px monospace";
+      ctx.fillStyle = "#64748b";
+      ctx.fillText("WL: 40 | WW: 80 | uCT 710", lx + 12, ly + 36);
+
+      // 模拟 CT 圆形颅脑切片 (随时间微调 Z 轴切片)
+      const lcx = lx + lw / 2;
+      const lcy = ly + 140;
+      const sliceZ = 1450.5 + Math.sin(timeInCh * 0.5) * 6.0;
+
+      // 颅骨骨环 (高密度 1000 HU)
+      ctx.beginPath();
+      ctx.ellipse(lcx, lcy, 95, 110, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "#111827";
+      ctx.fill();
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 5;
+      ctx.stroke();
+
+      // 脑实质 (灰质/白质 30~40 HU)
+      ctx.beginPath();
+      ctx.ellipse(lcx, lcy, 90, 105, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "#1f2937";
+      ctx.fill();
+
+      // 脑室系统 (0~10 HU 脑脊液)
+      ctx.fillStyle = "#030712";
+      ctx.beginPath();
+      ctx.ellipse(lcx - 12, lcy - 10, 8, 28, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(lcx + 12, lcy - 10, 8, 28, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 右侧基底节血肿 (高密度 68 HU 暗红色阴影)
+      ctx.beginPath();
+      ctx.ellipse(lcx + 28, lcy + 8, 26, 20, 0.3, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(220, 38, 38, 0.75)";
+      ctx.fill();
+      ctx.strokeStyle = "#ef4444";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // 黑洞征低密度中心 (18 HU)
+      ctx.beginPath();
+      ctx.arc(lcx + 32, lcy + 5, 6, 0, Math.PI * 2);
+      ctx.fillStyle = "#1e1b4b";
+      ctx.fill();
+      ctx.strokeStyle = "#facc15";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // CT 十字准星标线
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(lx + 20, lcy); ctx.lineTo(lx + lw - 20, lcy);
+      ctx.moveTo(lcx, ly + 45); ctx.lineTo(lcx, ly + 235);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 切片深度滑动标尺
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(lx + 12, ly + 250, lw - 24, 28);
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.2)";
+      ctx.strokeRect(lx + 12, ly + 250, lw - 24, 28);
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "10px monospace";
+      ctx.fillText(`层位深度: Z = ${sliceZ.toFixed(1)} mm (42/64)`, lx + 20, ly + 268);
+
+      // CT 影像组学定量参数卡片
+      const cyParams = ly + 295;
+      ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+      ctx.beginPath(); ctx.roundRect(lx + 12, cyParams, lw - 24, 150, 8); ctx.fill();
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.2)"; ctx.stroke();
+
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 11px -apple-system, sans-serif";
+      ctx.fillText("🔬 影像组学体素指标", lx + 22, cyParams + 22);
+
+      ctx.font = "10px monospace";
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillText("● 血肿体积: 33.29 mL (>30mL强指征)", lx + 22, cyParams + 42);
+      ctx.fillText("● 水肿带体积: 21.40 mL", lx + 22, cyParams + 60);
+      ctx.fillText("● 中线结构向左移位: 4.2 mm", lx + 22, cyParams + 78);
+      ctx.fillStyle = "#facc15";
+      ctx.fillText("● 黑洞征: 阳性 (18 HU 低密度灶)", lx + 22, cyParams + 98);
+      ctx.fillStyle = "#f87171";
+      ctx.fillText("● 24h再扩大危险度: 76% (极高危)", lx + 22, cyParams + 118);
+      ctx.fillStyle = "#34d399";
+      ctx.fillText("● 手术适应证: 强烈建议微创手术", lx + 22, cyParams + 138);
+
+      // -------------------------------------------------------------
+      // 3. 中间视窗 (x: 292, y: 52, w: 672, h: 654)：3D 解剖空间与穿刺路径主视窗
+      // -------------------------------------------------------------
+      const cx = 292, cy = 52, cw = 672, ch = 654;
+      ctx.fillStyle = "#020617";
+      ctx.beginPath(); ctx.roundRect(cx, cy, cw, ch, 10); ctx.fill();
+      ctx.strokeStyle = "rgba(30, 41, 59, 0.8)"; ctx.stroke();
+
+      // 空间网格底纹
+      ctx.strokeStyle = "rgba(30, 41, 59, 0.35)";
+      ctx.lineWidth = 1;
+      for (let x = cx + 20; x < cx + cw; x += 48) {
+        ctx.beginPath(); ctx.moveTo(x, cy); ctx.lineTo(x, cy + ch); ctx.stroke();
+      }
+      for (let y = cy + 20; y < cy + ch; y += 48) {
+        ctx.beginPath(); ctx.moveTo(cx, y); ctx.lineTo(cx + cw, y); ctx.stroke();
+      }
+
+      // 3D 头部与解剖几何中心
+      const headCenterX = cx + cw * 0.48;
+      const headCenterY = cy + ch * 0.52;
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+
+      ctx.save();
+      ctx.translate(headCenterX, headCenterY);
+
+      // (1) 真实人体解剖学颅骨多结构三维渲染 (Calvaria, Orbits, Piriform, Zygoma, Sutures)
+      // A. 外层半透明软组织与头皮轮廓 (Scalp Soft-Tissue Envelope)
+      ctx.beginPath();
+      ctx.moveTo(-168 * cosA, -20);
+      ctx.bezierCurveTo(-175 * cosA, -120, -110, -215, 0, -218);
+      ctx.bezierCurveTo(110, -215, 175 * cosA, -120, 168 * cosA, -20);
+      ctx.bezierCurveTo(160 * cosA, 40, 115 * cosA, 130, 75 * cosA, 165); // 下颌过渡
+      ctx.bezierCurveTo(40 * cosA, 185, -40 * cosA, 185, -75 * cosA, 165);
+      ctx.bezierCurveTo(-115 * cosA, 130, -160 * cosA, 40, -168 * cosA, -20);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(251, 207, 232, 0.08)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(244, 114, 182, 0.25)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // B. 真实人体骨性颅骨轮廓 (Cranial Vault & Facial Skeleton)
+      const skullGrad = ctx.createRadialGradient(-40 * cosA, -45, 25, 0, 0, 195);
+      skullGrad.addColorStop(0, "rgba(248, 245, 235, 0.58)"); // 象牙白皮质骨
+      skullGrad.addColorStop(0.5, "rgba(230, 222, 208, 0.40)");
+      skullGrad.addColorStop(0.85, "rgba(188, 178, 162, 0.22)");
+      skullGrad.addColorStop(1, "rgba(71, 85, 105, 0.06)");
+
+      ctx.beginPath();
+      // 从枕骨大孔与颈部向上绘制真实人类头颅轮廓
+      ctx.moveTo(-75 * cosA, 140);
+      // 下颌角与颞下颌关节 (Mandibular Angle & TMJ)
+      ctx.bezierCurveTo(-105 * cosA, 110, -135 * cosA, 70, -145 * cosA, 25);
+      // 颧骨与颧弓外突骨桥 (Zygomatic Arch Bridge)
+      ctx.bezierCurveTo(-162 * cosA, 10, -160 * cosA, -15, -152 * cosA, -35);
+      // 眶外缘与额骨颞窝凹陷 (Temporal Fossa Depression)
+      ctx.bezierCurveTo(-146 * cosA, -60, -152 * cosA, -100, -136 * cosA, -140);
+      // 额骨穹窿与额结节 (Frontal Tuber & Calvaria Dome)
+      ctx.bezierCurveTo(-110 * cosA, -188, -60 * cosA, -210, 0, -212);
+      ctx.bezierCurveTo(60 * cosA, -210, 110 * cosA, -188, 136 * cosA, -140);
+      // 右侧额颞区与右颧弓骨桥
+      ctx.bezierCurveTo(152 * cosA, -100, 146 * cosA, -60, 152 * cosA, -35);
+      ctx.bezierCurveTo(160 * cosA, -15, 162 * cosA, 10, 145 * cosA, 25);
+      // 右下颌骨与颏结节 (Mandible & Mental Protuberance)
+      ctx.bezierCurveTo(135 * cosA, 70, 105 * cosA, 110, 75 * cosA, 140);
+      ctx.bezierCurveTo(40 * cosA, 158, -40 * cosA, 158, -75 * cosA, 140);
+      ctx.closePath();
+      ctx.fillStyle = skullGrad;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(241, 245, 249, 0.75)";
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+
+      // B2. 颞下窝与颧弓下方立体透光孔
+      ctx.strokeStyle = "rgba(100, 116, 139, 0.45)";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.ellipse(-140 * cosA, -10, 14 * Math.abs(cosA), 8, -0.2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(140 * cosA, -10, 14 * Math.abs(cosA), 8, 0.2, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // C. 真实双侧眼眶骨窗 (Orbital Cavities & Optic Canals)
+      for (let side of [-1, 1]) {
+        const orbitCenterX = (side * 48 + 8 * sinA) * cosA;
+        const orbitCenterY = -28;
+        const orbitW = 28 * Math.abs(cosA) + 6;
+        const orbitH = 26;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(orbitCenterX, orbitCenterY, orbitW, orbitH, side * 0.15, 0, Math.PI * 2);
+        // 眼眶内凹深空阴影
+        const orbGrad = ctx.createRadialGradient(orbitCenterX, orbitCenterY, 3, orbitCenterX, orbitCenterY, orbitW);
+        orbGrad.addColorStop(0, "rgba(10, 15, 26, 0.95)");
+        orbGrad.addColorStop(0.7, "rgba(20, 28, 45, 0.85)");
+        orbGrad.addColorStop(1, "rgba(71, 85, 105, 0.4)");
+        ctx.fillStyle = orbGrad;
+        ctx.fill();
+        ctx.strokeStyle = "rgba(241, 245, 249, 0.85)"; // 眶上缘骨质高光
+        ctx.lineWidth = 2.2;
+        ctx.stroke();
+
+        // 眶上切迹 (Supraorbital Notch)
+        ctx.beginPath();
+        ctx.arc(orbitCenterX - side * 6, orbitCenterY - 14, 2.5, 0, Math.PI);
+        ctx.fillStyle = "rgba(148, 163, 184, 0.8)";
+        ctx.fill();
+
+        // 眶内深部视神经孔 (Optic Foramen)
+        ctx.beginPath();
+        ctx.arc(orbitCenterX - side * 4, orbitCenterY - 2, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.98)";
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // D. 骨性鼻骨与中线梨状孔 (Nasal Bone & Piriform Aperture)
+      const noseX = 4 * sinA * cosA;
+      ctx.beginPath();
+      // 鼻骨隆起
+      ctx.moveTo(noseX, -38);
+      ctx.lineTo(noseX - 8 * cosA, 5);
+      ctx.lineTo(noseX, 30); // 鼻中隔基底
+      ctx.lineTo(noseX + 8 * cosA, 5);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(226, 232, 240, 0.7)";
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+
+      // 骨性鼻中隔 (Nasal Septum)
+      ctx.strokeStyle = "rgba(248, 250, 252, 0.8)";
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(noseX, -6); ctx.lineTo(noseX, 28);
+      ctx.stroke();
+
+      // E. 上颌牙弓与下颌中线轮廓 (Alveolar Process & Teeth Impressions)
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.6)";
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      for (let t = -4; t <= 4; t++) {
+        const tx = (t * 8 + 2 * sinA) * cosA;
+        ctx.moveTo(tx, 58);
+        ctx.lineTo(tx, 76);
+      }
+      ctx.stroke();
+
+      // F. 真实人类颅骨骨缝 (Coronal, Sagittal & Lambdoid Sutures)
+      ctx.strokeStyle = "rgba(251, 191, 36, 0.55)"; // 解剖黄色骨缝
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([4, 2, 2, 2]);
+      // 冠状缝 (Coronal Suture: 从前额向双侧颞部走行)
+      ctx.beginPath();
+      ctx.moveTo(-130 * cosA, -80);
+      ctx.bezierCurveTo(-60 * cosA, -125, 60 * cosA, -125, 130 * cosA, -80);
+      ctx.stroke();
+      // 矢状缝 (Sagittal Suture: 头顶正中矢状走向)
+      ctx.beginPath();
+      ctx.moveTo(0, -212);
+      ctx.lineTo(0, -125);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // (2) 真实基底节区急性不规则多叶血肿 (Multilobular Hematoma, 33.29 mL)
+      const hx = 36 * cosA + 10;
+      const hy = 18;
+
+      // A. 周围脑水肿晕圈 (Perilesional Edema Penumbra, 21.40 mL)
+      const edemaGrad = ctx.createRadialGradient(hx, hy, 15, hx, hy, 68);
+      edemaGrad.addColorStop(0, "rgba(254, 240, 138, 0.42)");
+      edemaGrad.addColorStop(0.6, "rgba(253, 224, 71, 0.20)");
+      edemaGrad.addColorStop(1, "rgba(250, 204, 21, 0.0)");
+
+      ctx.beginPath();
+      ctx.ellipse(hx, hy, 70, 54, angle * 0.2, 0, Math.PI * 2);
+      ctx.fillStyle = edemaGrad;
+      ctx.fill();
+
+      // B. 真实多叶分房血凝块形态 (Irregular Jagged Lobules, 33.29 mL 凝血核)
+      ctx.save();
+      ctx.translate(hx, hy);
+      ctx.rotate(angle * 0.15);
+
+      // 真实血凝块多叶外壁 (暗红至紫褐肝样质地，68 HU)
+      ctx.beginPath();
+      const numLobes = 12;
+      const baseR = 38;
+      const lobeOffsets = [8, -6, 12, 4, -8, 14, -5, 10, -7, 6, -4, 9];
+      for (let i = 0; i < numLobes; i++) {
+        const theta = (i / numLobes) * Math.PI * 2;
+        const r = baseR + lobeOffsets[i];
+        const lx = Math.cos(theta) * r * 1.15;
+        const ly = Math.sin(theta) * r * 0.9;
+        if (i === 0) ctx.moveTo(lx, ly);
+        else ctx.lineTo(lx, ly);
+      }
+      ctx.closePath();
+
+      const clotGrad = ctx.createRadialGradient(-8, -8, 5, 0, 0, 48);
+      clotGrad.addColorStop(0, "#991b1b"); // 浅暗红
+      clotGrad.addColorStop(0.4, "#7f1d1d"); // 凝血致密区
+      clotGrad.addColorStop(0.85, "#450a0a"); // 深层紫红血块
+      clotGrad.addColorStop(1, "#1c0407"); // 边缘含铁血黄素沉积
+
+      ctx.fillStyle = clotGrad;
+      ctx.shadowColor = "rgba(220, 38, 38, 0.70)";
+      ctx.shadowBlur = 24;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // 血凝块湿润高光与纤维蛋白条索
+      ctx.strokeStyle = "rgba(254, 202, 202, 0.35)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(-10, -12, 16, 8, -0.4, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // C. 黑洞征 (Black Hole Sign: 18 HU 活动性渗血低密度中心)
+      ctx.beginPath();
+      ctx.arc(8, -5, 13, 0, Math.PI * 2);
+      ctx.fillStyle = "#1e1b4b"; // 18 HU 低密度未凝固鲜血
+      ctx.fill();
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      // 黑洞征脉冲微环
+      ctx.beginPath();
+      ctx.arc(8, -5, 17 + Math.sin(currentTime * 4) * 2.5, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(250, 204, 21, 0.65)";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      ctx.restore();
+
+      // 3D 空间解剖引线标牌 (Anatomical Leader Labels)
+      // 1) 冠状缝标牌
+      ctx.fillStyle = "#fef08a";
+      ctx.font = "10px monospace";
+      ctx.fillText("冠状缝", -145 * cosA, -85);
+
+      // 2) 黑洞征活动性出血警示
+      if (chIdx === 1) {
+        ctx.fillStyle = "#fef08a";
+        ctx.font = "bold 11px monospace";
+        ctx.fillText("● 黑洞征 (18 HU 活动性渗血灶)", hx + 26, hy - 8);
+        ctx.fillStyle = "#f87171";
+        ctx.font = "10px monospace";
+        ctx.fillText("24h 扩大风险: 76% (极高危)", hx + 26, hy + 8);
+      } else {
+        ctx.fillStyle = "#cbd5e1";
+        ctx.font = "10px monospace";
+        ctx.fillText("基底节血肿 (33.29 mL)", hx + 28, hy + 2);
+      }
+
+      // (3) 皮质脊髓束 (CST 13 根金色白质纤维管线)
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#facc15";
+      ctx.shadowColor = "#eab308";
+      ctx.shadowBlur = 10;
+      for (let b = -2; b <= 2; b++) {
+        const offset = b * 4.2;
+        ctx.beginPath();
+        ctx.moveTo(hx - 36 + offset * cosA, hy - 85);
+        ctx.bezierCurveTo(hx - 32 + offset * cosA, hy - 25, hx - 26 + offset * cosA, hy + 25, hx - 16 + offset * cosA, hy + 90);
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+
+      // (4) 额叶发际内 Kocher 点穿刺路径与套管
+      const entryX = 68 * cosA;
+      const entryY = -145; // 右额骨发际内
+      const targetX = hx;
+      const targetY = hy;
+
+      // 穿刺轨迹中心线
+      const isDanger = (chIdx === 2 && currentTime > 68 && currentTime < 74);
+      ctx.strokeStyle = isDanger ? "#ef4444" : "#10b981";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 3]);
+      ctx.beginPath();
+      ctx.moveTo(entryX, entryY); ctx.lineTo(targetX, targetY); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 实体穿刺套管 (ø12mm BrainPath 透明神经内镜鞘管)
+      const dirX = targetX - entryX;
+      const dirY = targetY - entryY;
+      const len = Math.sqrt(dirX * dirX + dirY * dirY);
+      const normX = dirX / len;
+      const normY = dirY / len;
+
+      let tubeProgress = 1.0;
+      if (chIdx === 0) tubeProgress = 0.35;
+      if (chIdx === 5) tubeProgress = 0.5 + 0.38 * Math.sin(currentTime * 2.5);
+
+      const tipX = entryX + normX * len * tubeProgress;
+      const tipY = entryY + normY * len * tubeProgress;
+      const perpX = -normY * (chIdx >= 3 ? 12 : 5);
+      const perpY = normX * (chIdx >= 3 ? 12 : 5);
+
+      ctx.fillStyle = "rgba(56, 189, 248, 0.35)";
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(entryX + perpX, entryY + perpY);
+      ctx.lineTo(tipX + perpX, tipY + perpY);
+      ctx.lineTo(tipX - perpX, tipY - perpY);
+      ctx.lineTo(entryX - perpX, entryY - perpY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 骨孔标记环 (Kocher 点，骨孔 ø1.5cm)
+      ctx.beginPath();
+      ctx.ellipse(entryX, entryY, 12, 6, angle * 0.2, 0, Math.PI * 2);
+      ctx.fillStyle = "#38bdf8"; ctx.fill();
+      ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2; ctx.stroke();
+
+      // (5) 第 5 章：贴合额骨的个体化 3D 打印导板模型 (Cyan Plate)
+      if (chIdx === 4) {
+        ctx.fillStyle = "rgba(6, 182, 212, 0.55)";
+        ctx.strokeStyle = "#22d3ee";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(entryX - 35, entryY - 14, 70, 28, 8);
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 9px monospace";
+        ctx.fillText("3D打印导向柱 ø12mm", entryX - 32, entryY + 4);
+      }
+
+      // (6) CST 避障安全裕度标线 (5.85 mm SAFE)
+      if (chIdx === 2 || chIdx === 3) {
+        ctx.strokeStyle = "#34d399";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(targetX - 25, targetY);
+        ctx.lineTo(targetX, targetY);
+        ctx.stroke();
+
+        ctx.fillStyle = "#34d399";
+        ctx.font = "bold 12px monospace";
+        ctx.fillText("CST间隙: 5.85 mm (安全放行)", targetX - 110, targetY - 12);
+      }
+
+      ctx.restore();
+
+      // (7) 中间主视窗顶部的浮动功能与场景指示徽标卡片 (玻璃拟态)
+      const bx = cx + 16, by = cy + 16;
+      ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
+      ctx.beginPath(); ctx.roundRect(bx, by, cw - 32, 64, 8); ctx.fill();
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.4)"; ctx.lineWidth = 1; ctx.stroke();
+
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 13px -apple-system, sans-serif";
+      ctx.fillText(`🛠️ 核心功能: ${chapter.featureTitle}`, bx + 14, by + 24);
+
+      ctx.fillStyle = "#34d399";
+      ctx.font = "bold 12px -apple-system, sans-serif";
+      ctx.fillText(`🏥 临床应用场景: ${chapter.scenarioTitle}`, bx + 14, by + 48);
+
+      // (8) 第 6 章：在 3D 视窗右侧浮动渲染 5 层生物力学触觉曲线图 (Dural Pop 85% 陡降)
+      if (chIdx === 5) {
+        const gx = cx + cw - 260, gy = cy + ch - 190, gw = 240, gh = 170;
+        ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+        ctx.beginPath(); ctx.roundRect(gx, gy, gw, gh, 8); ctx.fill();
+        ctx.strokeStyle = "rgba(236, 72, 153, 0.5)"; ctx.stroke();
+
+        ctx.fillStyle = "#f472b6";
+        ctx.font = "bold 11px -apple-system, sans-serif";
+        ctx.fillText("⚡ 5层解剖触觉力学 (硬脑膜落空感)", gx + 12, gy + 20);
+
+        // 坐标轴
+        ctx.strokeStyle = "rgba(148, 163, 184, 0.3)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(gx + 25, gy + 35); ctx.lineTo(gx + 25, gy + 145); ctx.lineTo(gx + gw - 15, gy + 145);
+        ctx.stroke();
+
+        // 力反馈曲线：头皮 3.2N -> 颅骨 18.5N -> 硬脑膜 5.4N 骤降至 0.8N (落空感) -> 脑组织 0.45N
+        ctx.strokeStyle = "#ec4899";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(gx + 25, gy + 130);
+        ctx.lineTo(gx + 60, gy + 115); // 头皮 3.2N
+        ctx.lineTo(gx + 100, gy + 45); // 颅骨 18.5N
+        ctx.lineTo(gx + 140, gy + 90); // 硬脑膜 5.4N
+        ctx.lineTo(gx + 148, gy + 140); // 陡降至 0.8N (落空 Pop!)
+        ctx.lineTo(gx + 210, gy + 142); // 脑实质 0.45N
+        ctx.stroke();
+
+        ctx.fillStyle = "#facc15";
+        ctx.font = "bold 9px monospace";
+        ctx.fillText("落空感 (Pop) 降85%", gx + 120, gy + 80);
+      }
+
+      // (9) 第 7 章：在 3D 视窗浮动渲染标准化手术专案报告文档 (PDF Preview)
+      if (chIdx === 6) {
+        const px = cx + cw - 250, py = cy + ch - 190, pw = 230, ph = 170;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+        ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 8); ctx.fill();
+        ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 2; ctx.stroke();
+
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "bold 11px -apple-system, sans-serif";
+        ctx.fillText("📋 神经外科微创手术专案书", px + 12, py + 22);
+
+        ctx.font = "9px monospace";
+        ctx.fillStyle = "#334155";
+        ctx.fillText("患者: 潘善珍 (74岁/女) | ID: 20251118000395", px + 12, py + 40);
+        ctx.fillText("诊断: 右基底节脑出血 (33.29 mL)", px + 12, py + 55);
+        ctx.fillText("入路: Kocher 点 (22.5, 62.0, 45.0) mm", px + 12, py + 70);
+        ctx.fillText("深度: 61.2 mm | 倾角: 19.4° | CST间隙: 5.85mm", px + 12, py + 85);
+        ctx.fillText("耗材: ø12mm BrainPath 鞘管 + 3D导板", px + 12, py + 100);
+        ctx.fillStyle = "#059669";
+        ctx.fillText("合规: IEC 62304 / ISO 14971 (135项 PASS)", px + 12, py + 120);
+
+        ctx.fillStyle = "#dc2626";
+        ctx.font = "bold 10px -apple-system, sans-serif";
+        ctx.fillText("【术前三方核查已就绪 · 可直接签字】", px + 12, py + 145);
+      }
+
+      // -------------------------------------------------------------
+      // 4. 右侧视窗 (x: 976, y: 52, w: 292, h: 654)：软件实操功能与控制台
+      // -------------------------------------------------------------
+      const rx = 976, ry = 52, rw = 292, rh = 654;
+      ctx.fillStyle = "#0b0f19";
+      ctx.beginPath(); ctx.roundRect(rx, ry, rw, rh, 10); ctx.fill();
+      ctx.strokeStyle = "rgba(30, 41, 59, 0.8)"; ctx.stroke();
+
+      // 控制台标题
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 12px -apple-system, sans-serif";
+      ctx.fillText("🛠️ 软件实操控制台 (Active Tool)", rx + 14, ry + 24);
+
+      // 7 个软件功能按键模拟渲染
+      const toolNames = [
+        "1. 📁 导入多模态 DICOM 影像序列",
+        "2. 🧠 MONAI 深度学习病灶量化",
+        "3. ⚡ DTI CST 避障与安全放行",
+        "4. 🎯 3D Slicer 穿刺入路设计",
+        "5. 🖨️ 导出 3D 打印导板 STL",
+        "6. 🥽 原生 VR 触觉力学仿真",
+        "7. 📡 手术室推流 / 导出方案 PDF"
+      ];
+
+      let activeBtnY = ry + 42;
+      let activeBtnTargetY = 0;
+
+      toolNames.forEach((name, idx) => {
+        const by = ry + 42 + idx * 36;
+        const isActive = (idx === chIdx);
+
+        if (isActive) {
+          activeBtnTargetY = by + 15;
+          ctx.fillStyle = "rgba(37, 99, 235, 0.4)";
+          ctx.beginPath(); ctx.roundRect(rx + 12, by, rw - 24, 30, 6); ctx.fill();
+          ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 11px -apple-system, sans-serif";
+        } else {
+          ctx.fillStyle = "rgba(15, 23, 42, 0.6)";
+          ctx.beginPath(); ctx.roundRect(rx + 12, by, rw - 24, 30, 6); ctx.fill();
+          ctx.strokeStyle = "rgba(51, 65, 85, 0.5)"; ctx.lineWidth = 1; ctx.stroke();
+          ctx.fillStyle = "#94a3b8";
+          ctx.font = "10px -apple-system, sans-serif";
+        }
+        ctx.fillText(name, rx + 20, by + 19);
+      });
+
+      // 当前操作实操参数看板 (随步骤动态更新)
+      const pBoxY = ry + 305;
+      ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+      ctx.beginPath(); ctx.roundRect(rx + 12, pBoxY, rw - 24, 330, 8); ctx.fill();
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.3)"; ctx.stroke();
+
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 11px -apple-system, sans-serif";
+      ctx.fillText("📋 医生实操关键参数监控", rx + 22, pBoxY + 24);
+
+      ctx.font = "10px monospace";
+      ctx.fillStyle = "#cbd5e1";
+      ctx.fillText(`• 当前步骤: 第 ${chIdx + 1} / 7 步`, rx + 22, pBoxY + 48);
+      ctx.fillText(`• 入颅点: Kocher (22.5, 62.0, 45.0)`, rx + 22, pBoxY + 70);
+      ctx.fillText(`• 靶点质心: (-15.8, -15.8, -2.5)`, rx + 22, pBoxY + 92);
+      ctx.fillText(`• 穿刺总长: 61.2 mm | 倾角: 19.4°`, rx + 22, pBoxY + 114);
+
+      ctx.fillStyle = "#facc15";
+      ctx.fillText(`• 运动束间距: 5.85 mm (安全 ≥3.0)`, rx + 22, pBoxY + 140);
+      ctx.fillStyle = "#f87171";
+      ctx.fillText(`• 血肿量: 33.29 mL | 黑洞征 (+)`, rx + 22, pBoxY + 162);
+      ctx.fillStyle = "#a855f7";
+      ctx.fillText(`• 工作鞘管: ø12.0 mm BrainPath`, rx + 22, pBoxY + 184);
+      ctx.fillStyle = "#34d399";
+      ctx.fillText(`• 3D导板STL: 水密模型已就绪`, rx + 22, pBoxY + 206);
+      ctx.fillText(`• OpenIGTLink: 推流至 18944 端口`, rx + 22, pBoxY + 228);
+      ctx.fillText(`• IEC 62304 测试: 135/135 通过`, rx + 22, pBoxY + 250);
+
+      // 实时操作按键 (模拟被医生点击)
+      const actionBtnY = pBoxY + 275;
+      const isClickAnim = (timeInCh > 1.5 && timeInCh < 3.0);
+      ctx.fillStyle = isClickAnim ? "#2563eb" : "#1d4ed8";
+      ctx.beginPath(); ctx.roundRect(rx + 22, actionBtnY, rw - 44, 38, 8); ctx.fill();
+      ctx.strokeStyle = isClickAnim ? "#ffffff" : "#60a5fa"; ctx.lineWidth = 1.5; ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 11px -apple-system, sans-serif";
+      ctx.fillText(isClickAnim ? "⚡ 执行操作指令 (Clicking...)" : "▶ 确认并执行当前规划", rx + 45, actionBtnY + 24);
+
+      // -------------------------------------------------------------
+      // 5. 模拟主刀医生鼠标光标 (Virtual Cursor)
+      // -------------------------------------------------------------
+      // 根据章节进度，光标滑向当前高亮操作按钮
+      const curStartX = cx + cw * 0.5;
+      const curStartY = cy + ch * 0.5;
+      const curTargetX = rx + rw * 0.5;
+      const curTargetY = actionBtnY + 18;
+
+      let curX, curY;
+      if (timeInCh < 2.0) {
+        const p = Math.min(1.0, timeInCh / 2.0);
+        curX = curStartX + (curTargetX - curStartX) * p;
+        curY = curStartY + (curTargetY - curStartY) * p;
+      } else {
+        curX = curTargetX;
+        curY = curTargetY;
+      }
+
+      // 绘制鼠标箭头光标
+      ctx.save();
+      ctx.translate(curX, curY);
+
+      // 点击波纹动画
+      if (isClickAnim) {
+        ctx.beginPath();
+        const r = 12 + (timeInCh - 1.5) * 16;
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(56, 189, 248, 0.8)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, 16);
+      ctx.lineTo(5, 12);
+      ctx.lineTo(10, 18);
+      ctx.lineTo(12, 16);
+      ctx.lineTo(7, 10);
+      ctx.lineTo(14, 10);
+      ctx.closePath();
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ==========================================
+    // 一键录制并下载高清教学视频 (.webm)
+    // ==========================================
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isRecording = false;
+
+    recordVideoBtn.addEventListener('click', () => {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    });
+
+    let currentRecordingFormat = 'mp4';
+    const recordMp4Btn = document.getElementById('recordMp4Btn');
+    const recordMp4Text = document.getElementById('recordMp4Text');
+
+    if (recordMp4Btn) {
+      recordMp4Btn.addEventListener('click', () => {
+        if (isRecording) {
+          stopRecording();
+        } else {
+          startRecording('mp4');
+        }
+      });
+    }
+
+    recordVideoBtn.addEventListener('click', () => {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording('webm');
+      }
+    });
+
+    function startRecording(fmt = 'mp4') {
+      currentRecordingFormat = fmt;
+      if (!canvas.captureStream) {
+        alert("当前浏览器不支持 Canvas 录制，请使用最新 Chrome 或 Edge 浏览器。");
+        return;
+      }
+
+      const stream = canvas.captureStream(30); // 30 FPS 视频流
+      let mimeType = '';
+      if (fmt === 'mp4') {
+        if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) {
+          mimeType = 'video/mp4;codecs=avc1';
+        } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+          mimeType = 'video/mp4';
+        } else {
+          mimeType = 'video/webm;codecs=vp9';
+        }
+      } else {
+        if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+          mimeType = 'video/webm;codecs=vp9';
+        } else {
+          mimeType = 'video/webm';
+        }
+      }
+
+      recordedChunks = [];
+      try {
+        mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType, videoBitsPerSecond: 4000000 });
+      } catch (e) {
+        mediaRecorder = new MediaRecorder(stream);
+      }
+
+      mediaRecorder.ondataavailable = e => {
+        if (e.data && e.data.size > 0) {
+          recordedChunks.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const isMp4 = mimeType.includes('mp4');
+        const blobType = isMp4 ? 'video/mp4' : 'video/webm';
+        const blob = new Blob(recordedChunks, { type: blobType });
+        const isAuto = urlParams.get('autorecord') === '1' || urlParams.get('autorecord') === 'mp4';
+
+        const serverFilename = isMp4 ? 'ICH_WeChat_Doctor_Tutorial_Video.mp4' : 'ICH_Doctor_Tutorial_Video.webm';
+        const clientDownloadName = isMp4 ? 'ICH_NeuroSim_WeChat_Share_Video.mp4' : 'ICH_NeuroSim_Doctor_Tutorial_20251118000395.webm';
+
+        // 1. 本地直接下载 (非无头模式)
+        if (!isAuto) {
+          const downloadUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = clientDownloadName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+
+        // 2. 自动上传保存到服务器端 vr_client 目录
+        try {
+          await fetch(`/api/save_video?filename=${serverFilename}`, {
+            method: 'POST',
+            body: blob
+          });
+          console.log(`Video saved to server vr_client/${serverFilename}, size: ` + blob.size);
+        } catch (err) {
+          console.warn("Server save error:", err);
+        }
+
+        if (!isAuto) {
+          alert(`✅ 医生教学视频录制完成！\n- 格式: ${isMp4 ? '微信原生兼容 MP4 (H.264/AVC)' : 'WebM 高清流'}\n- 文件名: ${clientDownloadName}\n- 大小: ${(blob.size / 1024 / 1024).toFixed(2)} MB\n- 可直接发送微信好友、微信群聊或朋友圈分享！`);
+        } else {
+          console.log("AUTOMATED_RECORDING_FINISHED");
+          setTimeout(() => { window.close(); }, 500);
+        }
+
+        isRecording = false;
+        if (recordMp4Text) recordMp4Text.textContent = "📱 导出微信专用视频 (.mp4)";
+        recordText.textContent = "🎬 WebM 录制";
+        if (recordMp4Btn) recordMp4Btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white transition shadow-md shadow-emerald-600/30 border border-emerald-400/40";
+        recordVideoBtn.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700";
+      };
+
+      mediaRecorder.start(1000);
+      isRecording = true;
+      if (fmt === 'mp4' && recordMp4Text) {
+        recordMp4Text.textContent = "🛑 正在录制微信 MP4...";
+        recordMp4Btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-500 text-white transition shadow-lg shadow-red-600/50 border border-white animate-pulse";
+      } else {
+        recordText.textContent = "🛑 正在录制 WebM...";
+        recordVideoBtn.className = "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-500 text-white transition shadow-lg shadow-red-600/50 border border-white animate-pulse";
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+    }
+
+    // 检查 URL 是否带 autorecord 参数 (用于全自动录制并保存多章节教学视频文件)
+    if (urlParams.get('autorecord') === '1' || urlParams.get('autorecord') === 'mp4') {
+      const recFormat = (urlParams.get('format') === 'webm') ? 'webm' : 'mp4';
+      setTimeout(() => {
+        startRecording(recFormat);
+        let stepIdx = 0;
+        const stepTimes = [0, 32, 62, 95, 128, 158, 188];
+        const stepInterval = setInterval(() => {
+          stepIdx++;
+          if (stepIdx < stepTimes.length) {
+            currentTime = stepTimes[stepIdx];
+          } else {
+            clearInterval(stepInterval);
+            setTimeout(() => stopRecording(), 1000);
+          }
+        }, 1800); // 14 秒内完整录制 7 大章节真实软件实操与临床场景
+      }, 500);
+    }
+
+    // 初始化播放状态与图标
+    updatePlayPauseUI();
+
+    // 启动渲染循环
+    renderSimulationFrame();
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+﻿# Binaries & build artifacts
+*.rar
+*.zip
+*.log
+*.tmp
+bin/
+obj/
+*.suo
+*.user
+
+# System & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,158 @@
+﻿[
+    {
+        "z_mm":  1406.46106,
+        "source_dcm":  "1_0.dcm",
+        "filename":  "slice_00.png",
+        "index":  0
+    },
+    {
+        "z_mm":  1411.46106,
+        "source_dcm":  "2_1.dcm",
+        "filename":  "slice_01.png",
+        "index":  1
+    },
+    {
+        "z_mm":  1416.46106,
+        "source_dcm":  "3_2.dcm",
+        "filename":  "slice_02.png",
+        "index":  2
+    },
+    {
+        "z_mm":  1421.46106,
+        "source_dcm":  "4_3.dcm",
+        "filename":  "slice_03.png",
+        "index":  3
+    },
+    {
+        "z_mm":  1426.46106,
+        "source_dcm":  "5_4.dcm",
+        "filename":  "slice_04.png",
+        "index":  4
+    },
+    {
+        "z_mm":  1431.46106,
+        "source_dcm":  "6_5.dcm",
+        "filename":  "slice_05.png",
+        "index":  5
+    },
+    {
+        "z_mm":  1436.46106,
+        "source_dcm":  "7_8.dcm",
+        "filename":  "slice_06.png",
+        "index":  6
+    },
+    {
+        "z_mm":  1441.46106,
+        "source_dcm":  "8_7.dcm",
+        "filename":  "slice_07.png",
+        "index":  7
+    },
+    {
+        "z_mm":  1446.46106,
+        "source_dcm":  "9_6.dcm",
+        "filename":  "slice_08.png",
+        "index":  8
+    },
+    {
+        "z_mm":  1451.46106,
+        "source_dcm":  "10_9.dcm",
+        "filename":  "slice_09.png",
+        "index":  9
+    },
+    {
+        "z_mm":  1456.46106,
+        "source_dcm":  "11_10.dcm",
+        "filename":  "slice_10.png",
+        "index":  10
+    },
+    {
+        "z_mm":  1461.46106,
+        "source_dcm":  "12_11.dcm",
+        "filename":  "slice_11.png",
+        "index":  11
+    },
+    {
+        "z_mm":  1466.46106,
+        "source_dcm":  "13_12.dcm",
+        "filename":  "slice_12.png",
+        "index":  12
+    },
+    {
+        "z_mm":  1471.46106,
+        "source_dcm":  "14_14.dcm",
+        "filename":  "slice_13.png",
+        "index":  13
+    },
+    {
+        "z_mm":  1476.46106,
+        "source_dcm":  "15_13.dcm",
+        "filename":  "slice_14.png",
+        "index":  14
+    },
+    {
+        "z_mm":  1481.46106,
+        "source_dcm":  "16_15.dcm",
+        "filename":  "slice_15.png",
+        "index":  15
+    },
+    {
+        "z_mm":  1486.46106,
+        "source_dcm":  "17_16.dcm",
+        "filename":  "slice_16.png",
+        "index":  16
+    },
+    {
+        "z_mm":  1491.46106,
+        "source_dcm":  "18_17.dcm",
+        "filename":  "slice_17.png",
+        "index":  17
+    },
+    {
+        "z_mm":  1496.46106,
+        "source_dcm":  "19_20.dcm",
+        "filename":  "slice_18.png",
+        "index":  18
+    },
+    {
+        "z_mm":  1501.46106,
+        "source_dcm":  "20_18.dcm",
+        "filename":  "slice_19.png",
+        "index":  19
+    },
+    {
+        "z_mm":  1506.46106,
+        "source_dcm":  "21_19.dcm",
+        "filename":  "slice_20.png",
+        "index":  20
+    },
+    {
+        "z_mm":  1511.46106,
+        "source_dcm":  "22_22.dcm",
+        "filename":  "slice_21.png",
+        "index":  21
+    },
+    {
+        "z_mm":  1516.46106,
+        "source_dcm":  "23_21.dcm",
+        "filename":  "slice_22.png",
+        "index":  22
+    },
+    {
+        "z_mm":  1521.46106,
+        "source_dcm":  "24_23.dcm",
+        "filename":  "slice_23.png",
+        "index":  23
+    },
+    {
+        "z_mm":  1526.46106,
+        "source_dcm":  "25_25.dcm",
+        "filename":  "slice_24.png",
+        "index":  24
+    },
+    {
+        "z_mm":  1531.46106,
+        "source_dcm":  "26_24.dcm",
+        "filename":  "slice_25.png",
+        "index":  25
+    }
+]

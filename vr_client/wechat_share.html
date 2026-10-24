@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ICH-NeuroSim 2.0 | 脑出血微创穿刺手术智能规划系统 - 功能演示与微信分享</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    body {
+      background-color: #030712;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    .glass-header {
+      background: rgba(3, 7, 18, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(30, 41, 59, 0.8);
+    }
+    video::-webkit-media-controls-enclosure {
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white pb-10">
+
+  <!-- 顶部微信卡片导航栏 -->
+  <header class="sticky top-0 z-50 glass-header px-4 py-3 flex items-center justify-between shadow-lg">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-base shadow-md shadow-cyan-500/20">
+        🧠
+      </div>
+      <div>
+        <h1 class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5">
+          ICH-NeuroSim 2.0
+          <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded font-mono font-semibold">微信专享</span>
+        </h1>
+        <p class="text-[11px] text-slate-400">脑出血微创穿刺手术智能规划与培训演示</p>
+      </div>
+    </div>
+
+    <button id="wechatTipBtn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-600/30 text-emerald-300 border border-emerald-500/50 hover:bg-emerald-600/50 transition">
+      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.5 13.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm7 0a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm3.5-5.5C19 3.6 15.4 1 11 1 6.6 1 3 3.6 3 8c0 2.4 1.1 4.6 2.9 6.1L5 18l4.1-1.4c.6.2 1.3.4 1.9.4 4.4 0 8-2.6 8-6zm2.5 4.5c0-.3 0-.7-.1-1-.2 2.2-2.3 4-5 4-.6 0-1.1-.1-1.6-.2l-2.8 1 1-2.4c-1.4-1-2.2-2.3-2.2-3.8 0-.2 0-.4.1-.6-.2 0-.4-.1-.5-.1-3.6 0-6.5-2.2-6.5-5s2.9-5 6.5-5c3.6 0 6.5 2.2 6.5 5 0 .2 0 .4-.1.6 2.6.4 4.7 2.3 4.7 4.5z"/></svg>
+      <span>转发好友</span>
+    </button>
+  </header>
+
+  <!-- 微信提示右上角分享引导蒙层 (点击触发) -->
+  <div id="wechatShareMask" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex-col items-end p-6">
+    <div class="flex items-start gap-2 text-white mr-2">
+      <span class="text-sm font-bold text-amber-300">点击右上角「···」分享给好友或朋友圈 ↗</span>
+      <svg class="w-8 h-8 text-amber-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+      </svg>
+    </div>
+    <div class="mt-8 bg-slate-900 border border-slate-700 rounded-2xl p-4 text-xs text-slate-300 w-full max-w-xs space-y-2">
+      <p class="font-bold text-cyan-400">💡 微信分享小提示：</p>
+      <p>① 点击右上角可直接将本页发送给医生同行或患者家属；</p>
+      <p>② 可点击下方【下载 MP4 视频】直接将原生视频文件拖入微信聊天；</p>
+      <p>③ 点击下方【一键复制朋友圈文案】即可直接配图发圈。</p>
+      <button id="closeMaskBtn" class="w-full mt-3 py-2 rounded-xl bg-blue-600 text-white font-bold text-center">我知道了</button>
+    </div>
+  </div>
+
+  <!-- 主体内容容器 -->
+  <main class="max-w-xl mx-auto w-full px-4 pt-3 space-y-4">
+
+    <!-- 1. 微信原生视频播放器视窗 -->
+    <div class="rounded-2xl overflow-hidden glass-card shadow-2xl relative border border-cyan-500/30">
+      <div class="relative w-full aspect-video bg-black flex items-center justify-center">
+        <!-- 适配微信 X5 内核与 iOS 的 H5 Video 标签 -->
+        <video id="wechatVideo"
+               class="w-full h-full object-contain"
+               controls
+               preload="auto"
+               playsinline
+               webkit-playsinline="true"
+               x5-video-player-type="h5-page"
+               x5-video-player-fullscreen="true"
+               x5-video-orientation="landscape|portrait"
+               poster="slices/slice_11.png">
+          <source src="ICH_WeChat_Doctor_Tutorial_Video.mp4" type="video/mp4">
+          <source src="ICH_Doctor_Tutorial_Video.webm" type="video/webm">
+          您的浏览器暂不支持原生视频播放，请直接点击下方按钮下载 MP4 视频。
+        </video>
+      </div>
+
+      <!-- 视频章节快速跳转按键横滑条 -->
+      <div class="p-2.5 bg-slate-950/80 border-t border-slate-800 flex items-center gap-1.5 overflow-x-auto text-[11px] no-scrollbar">
+        <span class="text-slate-400 font-bold shrink-0 text-[10px] pl-1">章节:</span>
+        <button class="chap-jump-btn px-2 py-1 rounded bg-blue-600 text-white font-semibold shrink-0" data-time="0">1.解剖重构</button>
+        <button class="chap-jump-btn px-2 py-1 rounded bg-slate-800 text-slate-300 shrink-0" data-time="30">2.AI黑洞征</button>
+        <button class="chap-jump-btn px-2 py-1 rounded bg-slate-800 text-slate-300 shrink-0" data-time="60">3.DTI避障</button>
+        <button class="chap-jump-btn px-2 py-1 rounded bg-slate-800 text-slate-300 shrink-0" data-time="90">4.Slicer入路</button>
+        <button class="chap-jump-btn px-2 py-1 rounded bg-slate-800 text-slate-300 shrink-0" data-time="125">5.3D导板&AR</button>
+        <button class="chap-jump-btn px-2 py-1 rounded bg-slate-800 text-slate-300 shrink-0" data-time="155">6.VR触觉</button>
+        <button class="chap-jump-btn px-2 py-1 rounded bg-slate-800 text-slate-300 shrink-0" data-time="185">7.导航推流</button>
+      </div>
+    </div>
+
+    <!-- 2. 微信专属功能操作工具箱 (MP4 下载 / 文案复制 / 二维码) -->
+    <div class="grid grid-cols-2 gap-2.5">
+      <!-- 下载 MP4 视频 (适合微信聊天/朋友圈发送) -->
+      <a href="ICH_WeChat_Doctor_Tutorial_Video.mp4" download="ICH_NeuroSim_WeChat_Share_Video.mp4" class="glass-card p-3 rounded-2xl flex items-center gap-2.5 border border-emerald-500/40 hover:bg-emerald-950/30 transition group">
+        <div class="w-10 h-10 rounded-xl bg-emerald-600/30 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-lg shrink-0 group-hover:scale-105 transition">
+          📥
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-bold text-white truncate">下载微信 MP4 视频</div>
+          <div class="text-[10px] text-emerald-400 font-mono">1080p · 3.2MB 原生</div>
+        </div>
+      </a>
+
+      <!-- 复制微信朋友圈/群发文案 -->
+      <button id="copyWechatPostBtn" class="glass-card p-3 rounded-2xl flex items-center gap-2.5 border border-cyan-500/40 hover:bg-cyan-950/30 transition text-left group">
+        <div class="w-10 h-10 rounded-xl bg-cyan-600/30 border border-cyan-500/50 flex items-center justify-center text-cyan-400 text-lg shrink-0 group-hover:scale-105 transition">
+          📋
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-bold text-white truncate">复制微信推介文案</div>
+          <div class="text-[10px] text-cyan-400 font-mono">一键配图发圈</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- 3. 患者临床真实病例基线与决策卡片 -->
+    <div class="glass-card rounded-2xl p-4 space-y-2.5 border border-slate-800">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <span class="text-xs font-bold text-cyan-400 flex items-center gap-1.5">
+          <span>🏥</span> 真实患者急诊病例画像
+        </span>
+        <span class="text-[10px] text-slate-400 font-mono">联影 uCT 710 双序列</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="bg-black/40 p-2 rounded-xl">
+          <span class="text-slate-400 text-[11px]">患者:</span>
+          <span class="font-bold text-slate-200"> 潘善珍 (74岁女性)</span>
+        </div>
+        <div class="bg-black/40 p-2 rounded-xl">
+          <span class="text-slate-400 text-[11px]">部位:</span>
+          <span class="font-bold text-slate-200"> 右侧基底节/内囊区</span>
+        </div>
+        <div class="bg-black/40 p-2 rounded-xl">
+          <span class="text-slate-400 text-[11px]">血肿量:</span>
+          <span class="font-bold text-red-400"> 33.29 mL (>30mL硬指征)</span>
+        </div>
+        <div class="bg-black/40 p-2 rounded-xl">
+          <span class="text-slate-400 text-[11px]">水肿量:</span>
+          <span class="font-bold text-amber-300"> 21.40 mL (中线左移4.2mm)</span>
+        </div>
+        <div class="bg-black/40 p-2 rounded-xl col-span-2 flex items-center justify-between">
+          <span class="text-slate-400 text-[11px]">黑洞征 (18 HU) 活动性渗血:</span>
+          <span class="font-bold text-amber-400 flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+            阳性 (24h 扩大风险 76%)
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 软件 7 大核心功能介绍清单 (点击可展开详情) -->
+    <div class="glass-card rounded-2xl p-4 space-y-3 border border-slate-800">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <span class="text-xs font-bold text-white flex items-center gap-1.5">
+          <span>🛠️</span> 软件 7 大核心功能与实操指南
+        </span>
+        <span class="text-[10px] text-cyan-400">ENRICH 2024 国际规范</span>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <!-- 模块 1 -->
+        <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+          <div class="font-bold text-cyan-300 mb-0.5">1. 真实解剖高保真三维重构 (uCT 710)</div>
+          <p class="text-slate-300 text-[11px] leading-relaxed">摒弃传统示意性圆球。利用象牙白皮质骨材质与单面深度锁，重建 202,140 面片高精度颅骨（眼眶、颧弓、鼻骨中隔）与 12 叶不规则分房血肿，附带淡粉色半透明头皮软组织轮廓。</p>
+        </div>
+
+        <!-- 模块 2 -->
+        <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+          <div class="font-bold text-emerald-300 mb-0.5">2. MONAI 深度学习量化与黑洞征 76% 预警</div>
+          <p class="text-slate-300 text-[11px] leading-relaxed">全卷积 3D SegResNet 神经网络 382ms 自动分割基底节血肿与周围水肿带。自动检出 18 HU 低密度黑洞征，提示超早期活动性微血管破裂，24h 扩大风险高达 76%，确立急诊手术指征。</p>
+        </div>
+
+        <!-- 模块 3 -->
+        <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+          <div class="font-bold text-yellow-300 mb-0.5">3. DTI 13 根皮质脊髓束 (CST) 与 3.0mm 避障</div>
+          <p class="text-slate-300 text-[11px] leading-relaxed">弥散张量重建 13 根金色运动传导束管线，实时计算套管外壁与 CST 欧氏间隙。严格执行 3.0mm 红线硬拦截，若穿刺逼近运动神经（如 1.15mm）系统触发全屏红光爆闪硬拦截，杜绝术后偏瘫。</p>
+        </div>
+
+        <!-- 模块 4 -->
+        <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+          <div class="font-bold text-indigo-300 mb-0.5">4. 3D Slicer 标准入路与 Draw Tube 工作通道</div>
+          <p class="text-slate-300 text-[11px] leading-relaxed">锁定右额发际内 Kocher 点，解算穿刺深度 61.2mm、矢状角 19.4° 与冠状角 22.8°。一键切换 ø3.2mm 穿刺引流针与 ø12mm BrainPath 神经内镜鞘管（右上角画中画 110° FOV 术野预览）。</p>
+        </div>
+
+        <!-- 模块 5 -->
+        <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+          <div class="font-bold text-purple-300 mb-0.5">5. 个体化 3D 打印导板 (STL) 与 SINA AR 手机投射</div>
+          <p class="text-slate-300 text-[11px] leading-relaxed">自动提取额骨曲率生成完美贴合的穿刺导向柱与固定翼，一键导出水密 STL 文件（成本不足百元）；支持普通智能手机后置相机对准患者眉心实现床旁全息增强现实透视穿刺。</p>
+        </div>
+
+        <!-- 模块 6 -->
+        <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+          <div class="font-bold text-rose-300 mb-0.5">6. 原生 VR 沉浸演练与 5 层触觉硬脑膜落空感 (Pop)</div>
+          <p class="text-slate-300 text-[11px] leading-relaxed">独立 C++ 触觉物理引擎（1000 Hz 伺服循环），拟合头皮弹性阻力、颅骨切削 150Hz 振颤，以及硬脑膜刺破瞬间阻力骤降 85%（5.4N -> 0.8N）的落空手感，提前建立医生肌肉记忆。</p>
+        </div>
+
+        <!-- 模块 7 -->
+        <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800">
+          <div class="font-bold text-cyan-300 mb-0.5">7. 手术室 OpenIGTLink 机械臂推流与全套方案导出</div>
+          <p class="text-slate-300 text-[11px] leading-relaxed">遵循 OpenIGTLink v3 协议向手术室机械臂导航仪实时推流靶点与位姿矩阵（TCP 18944 端口）；一键导出符合 IEC 62304 标准的手术准备专案书 PDF，通过 135 项全量自动化测试验收。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 电脑端完整规划工作台直通车 -->
+    <div class="text-center pt-2">
+      <a href="/" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 transition">
+        <span>💻 前往电脑端三维智能手术规划工作台</span>
+        <span>→</span>
+      </a>
+      <p class="text-[10px] text-slate-500 mt-2 font-mono">
+        ICH-NeuroSim 2.0 | 医疗软件 Class IIb 合规规范 | 支持微信内置浏览器极速流畅播放
+      </p>
+    </div>
+
+  </main>
+
+  <script>
+    // 微信分享提示引导浮层
+    const wechatTipBtn = document.getElementById('wechatTipBtn');
+    const wechatShareMask = document.getElementById('wechatShareMask');
+    const closeMaskBtn = document.getElementById('closeMaskBtn');
+
+    if (wechatTipBtn && wechatShareMask) {
+      wechatTipBtn.addEventListener('click', () => wechatShareMask.classList.remove('hidden'));
+    }
+    if (closeMaskBtn && wechatShareMask) {
+      closeMaskBtn.addEventListener('click', () => wechatShareMask.classList.add('hidden'));
+      wechatShareMask.addEventListener('click', (e) => {
+        if (e.target === wechatShareMask) wechatShareMask.classList.add('hidden');
+      });
+    }
+
+    // 章节快速跳转
+    const video = document.getElementById('wechatVideo');
+    const chapBtns = document.querySelectorAll('.chap-jump-btn');
+
+    chapBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const t = parseFloat(btn.dataset.time);
+        if (video) {
+          video.currentTime = t;
+          video.play().catch(e => console.log('Autoplay blocked:', e));
+        }
+        chapBtns.forEach(b => b.className = "chap-jump-btn px-2 py-1 rounded bg-slate-800 text-slate-300 shrink-0");
+        btn.className = "chap-jump-btn px-2 py-1 rounded bg-blue-600 text-white font-semibold shrink-0";
+      });
+    });
+
+    // 复制微信朋友圈/群聊推介文案
+    const copyBtn = document.getElementById('copyWechatPostBtn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        const textToCopy = `【神经外科手术智能规划教学推荐】🧠 ICH-NeuroSim 2.0 脑出血微创穿刺手术系统实操演示
+----------------------------------------
+📌 真实急诊病例：潘善珍（74岁女），右侧基底节区脑出血 33.29 mL，水肿 21.4 mL，中线左移 4.2mm。
+⚠️ AI影像组学检出 18 HU 黑洞征阳性，提示超早期活动性渗血，24h 扩大风险高达 76%，达 ENRICH 国际微创手术硬指征！
+🛡️ 核心亮点：
+1. 真实 20 万面象牙白皮质骨与多叶血肿高保真三维重建；
+2. DTI 13 根皮质脊髓束金色流线与 3.0mm 红线智能避障；
+3. 发际内 Kocher 点路径规划与 ø12mm BrainPath 内镜工作通道；
+4. 3D 打印导板 STL 一键导出与手机 SINA AR 床旁全息透视；
+5. 原生 VR 沉浸演练与硬脑膜刺破落空感（Pop）力反馈仿真；
+6. 手术室 OpenIGTLink 机械臂推流与全套临床方案导出。
+👉 欢迎神经外科同道体验与交流！视频大小仅 3.2MB，可直接微信播放转发。`;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            alert("✅ 微信推介文案已复制到剪贴板！\n您可以直接长按粘贴发送到微信群聊或朋友圈。");
+          }).catch(() => fallbackCopy(textToCopy));
+        } else {
+          fallbackCopy(textToCopy);
+        }
+      });
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      alert("✅ 微信推介文案已复制到剪贴板！\n您可以直接长按粘贴发送到微信群聊或朋友圈。");
+    }
+  </script>
+</body>
+</html>

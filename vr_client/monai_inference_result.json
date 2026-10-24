@@ -1,0 +1,33 @@
+﻿{
+    "model_architecture":  "MONAI_SegResNet_ICH_MultiLabel",
+    "window_level_hu":  40,
+    "inference_device":  "CPU_AVX2_SIMD_PYTORCH",
+    "quantification":  {
+                           "heterogeneity_score":  0.84,
+                           "long_axis_direction":  [
+                                                       0.245,
+                                                       0.812,
+                                                       0.529
+                                                   ],
+                           "edema_volume_ml":  21.4,
+                           "clinical_indication":  "STRONG_INDICATION_MIPS (Level 1A: ENRICH 2024 Trial Criteria Met)",
+                           "expansion_risk_probability":  0.76,
+                           "hematoma_volume_ml":  33.29,
+                           "ventricle_compression_pct":  68.5,
+                           "patient_id":  "20251118000395",
+                           "phe_ratio":  0.64,
+                           "midline_shift_mm":  4.2,
+                           "centroid_ras":  [
+                                                -15.8,
+                                                -15.8,
+                                                -2.5
+                                            ],
+                           "black_hole_sign":  true
+                       },
+    "input_spacing_mm":  [
+                             0.4375,
+                             0.4375,
+                             5
+                         ],
+    "window_width_hu":  80
+}
