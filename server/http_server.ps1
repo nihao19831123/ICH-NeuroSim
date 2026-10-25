@@ -120,6 +120,101 @@ while ($listener.IsListening) {
             continue
         }
 
+        # DICOM Manual Upload Endpoint (POST)
+        if ($urlPath -eq "/api/dicom/upload" -and $request.HttpMethod -eq "POST") {
+            $filename = $request.QueryString["filename"]
+            if ([string]::IsNullOrWhiteSpace($filename)) {
+                $filename = "slice_" + [DateTime]::Now.ToString("yyyyMMdd_HHmmssfff") + ".dcm"
+            }
+            $filename = [System.IO.Path]::GetFileName($filename)
+            $uploadDir = Join-Path $rootDir "uploads\dicom"
+            if (-not (Test-Path $uploadDir)) {
+                New-Item -ItemType Directory -Force -Path $uploadDir | Out-Null
+            }
+            $savePath = Join-Path $uploadDir $filename
+            $fileStream = [System.IO.File]::Create($savePath)
+            $request.InputStream.CopyTo($fileStream)
+            $fileStream.Close()
+
+            $response.ContentType = "application/json; charset=utf-8"
+            $respJson = '{"success":true,"filename":"' + $filename + '","path":"uploads/dicom/' + $filename + '","bytes":' + (Get-Item $savePath).Length + '}'
+            $respBytes = [System.Text.Encoding]::UTF8.GetBytes($respJson)
+            $response.ContentLength64 = $respBytes.Length
+            $response.OutputStream.Write($respBytes, 0, $respBytes.Length)
+            $response.Close()
+            continue
+        }
+
+        # DICOM Preset Series Endpoint (GET / HEAD)
+        if ($urlPath -eq "/api/dicom/preset" -and ($request.HttpMethod -eq "GET" -or $isHead)) {
+            $eDriveDir = "E:\20251118000395\401"
+            $sampleDir = Join-Path $rootDir "dicom_sample"
+            $chosenDir = ""
+            if (Test-Path $eDriveDir) {
+                $chosenDir = $eDriveDir
+            } elseif (Test-Path $sampleDir) {
+                $chosenDir = $sampleDir
+            }
+
+            $fileList = @()
+            if ($chosenDir -ne "") {
+                $items = Get-ChildItem -Path $chosenDir -Filter "*.dcm" | Sort-Object Name
+                foreach ($it in $items) {
+                    $fileList += $it.Name
+                }
+            }
+
+            $presetInfo = @{
+                success = $true
+                patient_name = "PAN SHAN ZHEN (潘善珍)"
+                patient_id = "20251118000395"
+                series_id = "401"
+                series_description = "Axial 5.0mm Brain Parenchyma uCT 710"
+                total_slices = $fileList.Count
+                files = $fileList
+                source_directory = $chosenDir
+            } | ConvertTo-Json -Depth 3
+
+            $response.ContentType = "application/json; charset=utf-8"
+            $buf = [System.Text.Encoding]::UTF8.GetBytes($presetInfo)
+            $response.ContentLength64 = $buf.Length
+            if (-not $isHead) {
+                $response.OutputStream.Write($buf, 0, $buf.Length)
+            }
+            $response.Close()
+            continue
+        }
+
+        # DICOM Preset File Stream Endpoint (GET / HEAD)
+        if ($urlPath -eq "/api/dicom/preset_file" -and ($request.HttpMethod -eq "GET" -or $isHead)) {
+            $fName = $request.QueryString["name"]
+            $fName = [System.IO.Path]::GetFileName($fName)
+            $ePath = Join-Path "E:\20251118000395\401" $fName
+            $samplePath = Join-Path $rootDir ("dicom_sample\" + $fName)
+
+            $targetPath = ""
+            if (Test-Path $ePath) { $targetPath = $ePath }
+            elseif (Test-Path $samplePath) { $targetPath = $samplePath }
+
+            if ($targetPath -ne "" -and (Test-Path $targetPath -PathType Leaf)) {
+                $dcmBytes = [System.IO.File]::ReadAllBytes($targetPath)
+                $response.ContentType = "application/dicom"
+                $response.ContentLength64 = $dcmBytes.Length
+                if (-not $isHead) {
+                    $response.OutputStream.Write($dcmBytes, 0, $dcmBytes.Length)
+                }
+            } else {
+                $response.StatusCode = 404
+                $errMsg = [System.Text.Encoding]::UTF8.GetBytes("DICOM file not found")
+                $response.ContentLength64 = $errMsg.Length
+                if (-not $isHead) {
+                    $response.OutputStream.Write($errMsg, 0, $errMsg.Length)
+                }
+            }
+            $response.Close()
+            continue
+        }
+
         # Static File Handler
         $relPath = $urlPath.TrimStart('/')
         if ($relPath -eq "" -or $relPath -eq "index.html") { $relPath = "index.html" }
@@ -134,6 +229,7 @@ while ($listener.IsListening) {
                 ".js"   { $response.ContentType = "application/javascript" }
                 ".json" { $response.ContentType = "application/json" }
                 ".pdf"  { $response.ContentType = "application/pdf" }
+                ".dcm"  { $response.ContentType = "application/dicom" }
                 ".webm" { 
                     $response.ContentType = "video/webm"
                     $response.Headers.Add("Accept-Ranges", "bytes")

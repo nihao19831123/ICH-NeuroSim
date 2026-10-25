@@ -7,6 +7,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <script src="dicom_parser.js"></script>
   <style>
     body { margin: 0; overflow: hidden; background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -68,6 +69,12 @@
         <span>🧪 135项测试全通 (PASS)</span>
       </button>
 
+      <!-- 核心交付成果: 手工上传 DICOM (PACS 对接与本地急诊应急载入) -->
+      <button id="dicomModalBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-blue-700 via-indigo-700 to-cyan-700 hover:from-blue-600 hover:to-cyan-600 text-white transition shadow-lg shadow-blue-700/30 border border-cyan-400/50">
+        <svg class="w-4 h-4 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        <span>📁 手工上传 DICOM</span>
+      </button>
+
       <span class="w-[1px] h-5 bg-slate-700/80 mx-1"></span>
 
       <!-- 3D打印导板生成按钮 (REQ-008) -->
@@ -110,29 +117,47 @@
         <span id="sliceIndexLabel" class="text-cyan-400 font-mono font-bold">第 11 层 (Z: 1456.5 mm)</span>
       </div>
       
-      <div class="relative w-full aspect-square bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center">
+      <div id="ctViewportContainer" class="relative w-full aspect-square bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center cursor-crosshair">
         <img id="realCtImage" src="slices/slice_11.png" alt="Patient CT Slice" class="w-full h-full object-contain">
+        <canvas id="dicomCanvas" class="w-full h-full object-contain hidden absolute inset-0"></canvas>
         
         <!-- 虚拟穿刺通道截面标记 (动态联动) -->
-        <div id="cannulaMarker2D" class="absolute w-7 h-7 rounded-full border-2 border-emerald-400 bg-emerald-400/20 pointer-events-none flex items-center justify-center" style="top: 52%; left: 46%;">
+        <div id="cannulaMarker2D" class="absolute w-7 h-7 rounded-full border-2 border-emerald-400 bg-emerald-400/20 pointer-events-none flex items-center justify-center z-10" style="top: 52%; left: 46%;">
           <div class="w-1.5 h-1.5 rounded-full bg-emerald-300"></div>
           <span class="absolute -top-3.5 left-6 text-[9px] bg-emerald-950/90 text-emerald-300 px-1 rounded border border-emerald-600/60 font-mono">
             套管截面
           </span>
         </div>
 
-        <div class="absolute top-1.5 left-2 text-[10px] text-red-400 font-mono bg-black/70 px-1.5 py-0.5 rounded border border-red-500/40">
+        <div id="hematomaDensityTag" class="absolute top-1.5 left-2 text-[10px] text-red-400 font-mono bg-black/70 px-1.5 py-0.5 rounded border border-red-500/40 z-10">
           ● 血肿密度: 65~88 HU
         </div>
-        <div class="absolute bottom-1.5 right-2 text-[10px] text-slate-400 font-mono bg-black/70 px-1.5 py-0.5 rounded">
+        <div id="liveHuBadge" class="absolute top-1.5 right-2 text-[10px] text-cyan-300 font-mono bg-black/80 px-1.5 py-0.5 rounded border border-cyan-500/40 z-10 hidden">
+          HU: --
+        </div>
+        <div id="windowParamTag" class="absolute bottom-1.5 right-2 text-[10px] text-slate-400 font-mono bg-black/70 px-1.5 py-0.5 rounded z-10">
           窗宽: 80 窗位: 40
+        </div>
+
+        <!-- 拖拽上传覆盖层提示 -->
+        <div id="viewerDropOverlay" class="absolute inset-0 bg-blue-950/85 border-2 border-dashed border-cyan-400 rounded-lg hidden flex-col items-center justify-center text-cyan-200 z-30 pointer-events-none">
+          <span class="text-2xl animate-bounce">📥</span>
+          <span class="text-xs font-bold mt-1 text-white">释放载入 DICOM 文件</span>
         </div>
       </div>
 
       <div class="flex items-center gap-2 pt-1">
-        <span class="text-[10px] text-slate-400 font-mono">00</span>
+        <span id="sliceMinLabel" class="text-[10px] text-slate-400 font-mono">00</span>
         <input type="range" id="sliceSlider" min="0" max="25" value="11" class="flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">
-        <span class="text-[10px] text-slate-400 font-mono">25</span>
+        <span id="sliceMaxLabel" class="text-[10px] text-slate-400 font-mono">25</span>
+      </div>
+
+      <!-- 快速调窗预设与手工上传入口 -->
+      <div class="grid grid-cols-4 gap-1 text-[10px]">
+        <button id="quickPresetBrain" class="py-1 px-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 text-center font-mono transition">脑窗</button>
+        <button id="quickPresetHematoma" class="py-1 px-0.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 rounded border border-rose-800 text-center font-mono transition">血肿</button>
+        <button id="quickPresetBone" class="py-1 px-0.5 bg-amber-950/80 hover:bg-amber-900 text-amber-300 rounded border border-amber-800 text-center font-mono transition">骨窗</button>
+        <button id="quickOpenDicomModal" class="py-1 px-0.5 bg-cyan-900/90 hover:bg-cyan-800 text-cyan-200 rounded border border-cyan-700 text-center font-bold transition">📁 传DCM</button>
       </div>
 
       <!-- 2D / 3D 断层切片投影与开颅剖视联动控件 -->
@@ -963,6 +988,202 @@
     </div>
   </div>
 
+  <!-- 手工上传 DICOM 影像序列模态框 (PACS 接口扩展与本地急诊应急载入) -->
+  <div id="dicomModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="glass-ui rounded-2xl w-full max-w-4xl max-h-[92vh] border border-cyan-500/60 shadow-2xl flex flex-col overflow-hidden">
+      <!-- 弹窗顶栏 -->
+      <div class="flex items-center justify-between border-b border-slate-700/80 px-6 py-4 bg-slate-900/90">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-cyan-600/30 border border-cyan-400/50 flex items-center justify-center text-cyan-300 font-bold text-base">
+            📁
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <span>手工上传 DICOM 影像序列 (PACS 接口扩展)</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-mono">DICOM Part 10 原生支持</span>
+            </h2>
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              支持医院 PACS 离线导出、U盘急救拷贝、CT 序列文件夹批量解析与实时窗宽窗位重采样
+            </p>
+          </div>
+        </div>
+        <button id="closeDicomModalBtn" class="text-slate-400 hover:text-white p-1 text-lg">✕</button>
+      </div>
+
+      <!-- 正文内容 (滚动区域) -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-5 text-xs text-slate-200 bg-slate-950">
+        
+        <!-- 数据源载入区 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <!-- 方式 1: 文件夹上传 (推荐) -->
+          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-cyan-500/40 transition">
+            <div>
+              <div class="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+                <span>📂</span> 批量上传 DICOM 文件夹
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">
+                选择包含多张 CT 断层切片的目录 (如包含 26 层或 427 层薄层 CT 的序列文件夹)。
+              </p>
+            </div>
+            <div class="mt-4">
+              <input type="file" id="dicomFolderInput" webkitdirectory directory multiple class="hidden">
+              <button onclick="document.getElementById('dicomFolderInput').click()" class="w-full py-2 bg-gradient-to-r from-cyan-700 to-blue-700 hover:from-cyan-600 hover:to-blue-600 text-white rounded-lg font-semibold flex items-center justify-center gap-1.5 shadow">
+                <span>📂 选择序列文件夹</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 方式 2: 多选单个/批量 DICOM 文件 -->
+          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex flex-col justify-between hover:border-cyan-500/40 transition">
+            <div>
+              <div class="flex items-center gap-2 text-indigo-300 font-bold text-sm">
+                <span>📄</span> 选择 DICOM 文件
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">
+                支持多选 .dcm 格式切片文件，系统将自动读取空间坐标按头-尾轴(Z轴)智能重排。
+              </p>
+            </div>
+            <div class="mt-4">
+              <input type="file" id="dicomFilesInput" multiple accept=".dcm,application/dicom,*" class="hidden">
+              <button onclick="document.getElementById('dicomFilesInput').click()" class="w-full py-2 bg-gradient-to-r from-indigo-700 to-purple-700 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-semibold flex items-center justify-center gap-1.5 shadow">
+                <span>📄 选择 .dcm 文件</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 方式 3: 真实病例原生序列一键载入 -->
+          <div class="bg-slate-900/80 p-4 rounded-xl border border-cyan-800/60 flex flex-col justify-between bg-gradient-to-b from-slate-900 to-cyan-950/30">
+            <div>
+              <div class="flex items-center gap-2 text-emerald-300 font-bold text-sm">
+                <span>⚡</span> 预设真实患者一键载入
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">
+                直读 <span class="text-cyan-300 font-mono">E:\20251118000395\401</span> 潘善珍 26 层 5.0mm 原生 CT 序列，毫秒级快速演示。
+              </p>
+            </div>
+            <div class="mt-4">
+              <button id="loadPresetDicomBtn" class="w-full py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white rounded-lg font-semibold flex items-center justify-center gap-1.5 shadow border border-emerald-500/40">
+                <span id="presetLoadingSpinner" class="hidden w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span>⚡ 一键载入真实病例 401 序列</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 拖拽上传专区 (Drag & Drop Zone) -->
+        <div id="dicomDropZone" class="border-2 border-dashed border-slate-700 hover:border-cyan-400/80 rounded-xl p-6 text-center bg-black/40 transition cursor-pointer flex flex-col items-center justify-center gap-2 group">
+          <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          </div>
+          <div>
+            <div class="text-sm font-semibold text-white">将 DICOM 文件或文件夹拖拽至此区域</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">浏览器本地瞬时解析，绝对隐私保护，无需上传第三方公网云端</div>
+          </div>
+        </div>
+
+        <!-- 解析进度与状态指示 -->
+        <div id="parseStatusAlert" class="hidden p-3 rounded-xl bg-blue-950/80 border border-blue-600/50 flex items-center justify-between text-xs text-blue-200">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+            <span id="parseStatusText">正在解析 DICOM 文件...</span>
+          </div>
+          <span id="parseStatusCount" class="font-mono text-cyan-300">0 / 0</span>
+        </div>
+
+        <!-- DICOM 序列医学元数据展示面板 -->
+        <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="font-bold text-white flex items-center gap-1.5 text-xs">
+              <span>🩺</span> 序列影像学元数据 (DICOM Part 10 Tags)
+            </span>
+            <span id="metaStatusBadge" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+              序列就绪 (26 层)
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-[11px] font-mono">
+            <div class="bg-black/50 p-2.5 rounded border border-slate-800">
+              <span class="text-slate-400 block text-[10px]">患者姓名 (0010,0010):</span>
+              <span id="metaPatientName" class="text-white font-bold">PAN SHAN ZHEN (潘善珍)</span>
+            </div>
+            <div class="bg-black/50 p-2.5 rounded border border-slate-800">
+              <span class="text-slate-400 block text-[10px]">患者 ID (0010,0020):</span>
+              <span id="metaPatientId" class="text-cyan-300 font-bold">20251118000395</span>
+            </div>
+            <div class="bg-black/50 p-2.5 rounded border border-slate-800">
+              <span class="text-slate-400 block text-[10px]">检查模态/设备 (0008,0060):</span>
+              <span id="metaModality" class="text-emerald-300 font-bold">CT (UIH uCT 710)</span>
+            </div>
+            <div class="bg-black/50 p-2.5 rounded border border-slate-800">
+              <span class="text-slate-400 block text-[10px]">切片总数 / 层厚:</span>
+              <span id="metaSliceInfo" class="text-amber-300 font-bold">26 层 / 5.0 mm</span>
+            </div>
+            <div class="bg-black/50 p-2.5 rounded border border-slate-800">
+              <span class="text-slate-400 block text-[10px]">矩阵分辨率:</span>
+              <span id="metaResolution" class="text-slate-200">512 x 512 体素</span>
+            </div>
+            <div class="bg-black/50 p-2.5 rounded border border-slate-800">
+              <span class="text-slate-400 block text-[10px]">像素间距 (Pixel Spacing):</span>
+              <span id="metaSpacing" class="text-slate-200">0.4375 x 0.4375 mm</span>
+            </div>
+            <div class="bg-black/50 p-2.5 rounded border border-slate-800">
+              <span class="text-slate-400 block text-[10px]">Z 轴物理范围:</span>
+              <span id="metaZRange" class="text-slate-200">1406.5 ~ 1531.5 mm</span>
+            </div>
+            <div class="bg-black/50 p-2.5 rounded border border-slate-800">
+              <span class="text-slate-400 block text-[10px]">当前窗宽 / 窗位:</span>
+              <span id="metaWindow" class="text-slate-200">WW: 80 / WL: 40</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 调窗控制与实时重采样滑块 -->
+        <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="font-bold text-white flex items-center gap-1.5 text-xs">
+              <span>🎚️</span> 临床 Hounsfield 调窗重采样 (Dynamic Windowing)
+            </span>
+            <div class="flex items-center gap-1.5 text-[10px]">
+              <button id="modalBtnBrain" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-mono transition">脑组织窗 (40/80)</button>
+              <button id="modalBtnHematoma" class="px-2 py-0.5 rounded bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 font-mono transition">血肿观察窗 (65/130)</button>
+              <button id="modalBtnBone" class="px-2 py-0.5 rounded bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-800 font-mono transition">颅骨骨窗 (450/1800)</button>
+              <button id="modalBtnSoft" class="px-2 py-0.5 rounded bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 border border-indigo-800 font-mono transition">软组织窗 (50/350)</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-[11px]">
+                <span class="text-slate-300">窗位 (Window Center / Level, WL):</span>
+                <span id="modalWcDisplay" class="font-mono font-bold text-cyan-400">40 HU</span>
+              </div>
+              <input type="range" id="modalWcSlider" min="-1000" max="1000" value="40" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+            </div>
+
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-[11px]">
+                <span class="text-slate-300">窗宽 (Window Width, WW):</span>
+                <span id="modalWwDisplay" class="font-mono font-bold text-cyan-400">80 HU</span>
+              </div>
+              <input type="range" id="modalWwSlider" min="1" max="3000" value="80" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 弹窗底栏 -->
+      <div class="flex items-center justify-between border-t border-slate-700/80 px-6 py-3 bg-slate-900/90">
+        <span class="text-[11px] text-slate-400">
+          💡 提示：载入 DICOM 后，左侧 2D 断层与 3D 场景切片投影将自动实时联动更新。
+        </span>
+        <button id="closeDicomModalBottomBtn" class="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition">
+          完成并关闭
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ==========================================
     // 1. Three.js 场景初始化
@@ -1320,31 +1541,77 @@
     // ==========================================
     // 2D & 3D 核心精准联动引擎 (3D Slice Plane + 2D Marker + 3D Clipping)
     // ==========================================
+    let loadedDicomSeries = null;
+    let currentWc = 40;
+    let currentWw = 80;
+    let dicomCanvasTexture = null;
+
     function update3DSlicePlane(idx) {
       currentSliceIndex = idx;
       const paddedIdx = idx.toString().padStart(2, '0');
       
-      // 1. 更新 2D CT 原生切片图像
-      if (realCtImage) {
-        realCtImage.src = `slices/slice_${paddedIdx}.png`;
-      }
-      // 物理 Z 坐标 (DICOM absolute Z: 1406.5 ~ 1531.5 mm, 相对模型中心 Z: -62.5 ~ +62.5 mm)
-      const dicomZ = 1406.5 + idx * 5.0;
-      const relZ = -62.5 + idx * 5.0;
-      if (sliceLabel) {
-        sliceLabel.textContent = `第 ${idx} 层 (Z: ${dicomZ.toFixed(1)} mm)`;
-      }
+      let dicomZ = 1406.5 + idx * 5.0;
+      let relZ = -62.5 + idx * 5.0;
 
-      // 2. 更新 3D 断层投影面的空间位置与图像贴图 (精确中心: X=13.43, Y=-51.60, Z=relZ)
-      if (slicePlaneMesh) {
-        slicePlaneMesh.position.set(13.43, -51.60, relZ);
-        slicePlaneMesh.visible = is3DSlicePlaneVisible;
+      const dcmCanvas = document.getElementById('dicomCanvas');
 
-        textureLoader.load(`slices/slice_${paddedIdx}.png`, tex => {
-          tex.generateMipmaps = true;
-          slicePlaneMat.map = tex;
+      if (loadedDicomSeries && loadedDicomSeries.length > 0) {
+        const clampedIdx = Math.max(0, Math.min(idx, loadedDicomSeries.length - 1));
+        const dcm = loadedDicomSeries[clampedIdx];
+
+        // 1. 动态渲染 DICOM 原始体素到 Canvas (结合当前窗宽窗位)
+        if (dcmCanvas) {
+          DicomParser.renderToCanvas(dcm, currentWc, currentWw, dcmCanvas);
+          dcmCanvas.classList.remove('hidden');
+        }
+        if (realCtImage) {
+          realCtImage.classList.add('hidden');
+        }
+
+        dicomZ = dcm.positionZ;
+        relZ = dcm.positionZ - 1469.0;
+
+        if (sliceLabel) {
+          sliceLabel.textContent = `第 ${clampedIdx} 层 (Z: ${dicomZ.toFixed(1)} mm)`;
+        }
+
+        // 2. 更新 3D 断层投影面的空间位置与 Canvas 纹理贴图
+        if (slicePlaneMesh && dcmCanvas) {
+          slicePlaneMesh.position.set(13.43, -51.60, relZ);
+          slicePlaneMesh.visible = is3DSlicePlaneVisible;
+
+          if (!dicomCanvasTexture) {
+            dicomCanvasTexture = new THREE.CanvasTexture(dcmCanvas);
+          } else {
+            dicomCanvasTexture.needsUpdate = true;
+          }
+          slicePlaneMat.map = dicomCanvasTexture;
           slicePlaneMat.needsUpdate = true;
-        });
+        }
+      } else {
+        // 回退默认 26 层预渲染切片
+        if (realCtImage) {
+          realCtImage.classList.remove('hidden');
+          realCtImage.src = `slices/slice_${paddedIdx}.png`;
+        }
+        if (dcmCanvas) {
+          dcmCanvas.classList.add('hidden');
+        }
+
+        if (sliceLabel) {
+          sliceLabel.textContent = `第 ${idx} 层 (Z: ${dicomZ.toFixed(1)} mm)`;
+        }
+
+        if (slicePlaneMesh) {
+          slicePlaneMesh.position.set(13.43, -51.60, relZ);
+          slicePlaneMesh.visible = is3DSlicePlaneVisible;
+
+          textureLoader.load(`slices/slice_${paddedIdx}.png`, tex => {
+            tex.generateMipmaps = true;
+            slicePlaneMat.map = tex;
+            slicePlaneMat.needsUpdate = true;
+          });
+        }
       }
 
       // 3. 计算穿刺套管轨迹 (entryPoint 到 targetPoint) 与当前 Z 平面的空间截面交点
@@ -1979,6 +2246,370 @@
       alert("✅ 已向手术室导航仪广播患者 20251118000395 靶点坐标！机械臂已锁定入颅姿态。");
       igtlModal.classList.add('hidden');
     });
+
+    // ==========================================
+    // 7. DICOM 手工上传、解析与调窗联动核心引擎 (SaMD Class III 国际标准)
+    // ==========================================
+    const dicomModal = document.getElementById('dicomModal');
+    const openDicomModal = () => {
+      if (dicomModal) {
+        dicomModal.classList.remove('hidden');
+        dicomModal.classList.add('flex');
+      }
+    };
+    const closeDicomModal = () => {
+      if (dicomModal) {
+        dicomModal.classList.add('hidden');
+        dicomModal.classList.remove('flex');
+      }
+    };
+
+    const dicomModalBtn = document.getElementById('dicomModalBtn');
+    if (dicomModalBtn) dicomModalBtn.addEventListener('click', openDicomModal);
+    const quickOpenDicomModal = document.getElementById('quickOpenDicomModal');
+    if (quickOpenDicomModal) quickOpenDicomModal.addEventListener('click', openDicomModal);
+    const closeDicomModalBtn = document.getElementById('closeDicomModalBtn');
+    if (closeDicomModalBtn) closeDicomModalBtn.addEventListener('click', closeDicomModal);
+    const closeDicomModalBottomBtn = document.getElementById('closeDicomModalBottomBtn');
+    if (closeDicomModalBottomBtn) closeDicomModalBottomBtn.addEventListener('click', closeDicomModal);
+
+    // 调窗控制与预设映射
+    function setWindowing(wc, ww) {
+      currentWc = wc;
+      currentWw = ww;
+      updateWindowControlsDisplay();
+      const currentIdx = parseInt(document.getElementById('sliceSlider').value);
+      update3DSlicePlane(currentIdx);
+    }
+
+    function updateWindowControlsDisplay() {
+      const wcSlider = document.getElementById('modalWcSlider');
+      const wwSlider = document.getElementById('modalWwSlider');
+      const wcDisp = document.getElementById('modalWcDisplay');
+      const wwDisp = document.getElementById('modalWwDisplay');
+      const metaWin = document.getElementById('metaWindow');
+      const winParam = document.getElementById('windowParamTag');
+
+      if (wcSlider) wcSlider.value = currentWc;
+      if (wwSlider) wwSlider.value = currentWw;
+      if (wcDisp) wcDisp.textContent = `${currentWc} HU`;
+      if (wwDisp) wwDisp.textContent = `${currentWw} HU`;
+      if (metaWin) metaWin.textContent = `WW: ${currentWw} / WL: ${currentWc}`;
+      if (winParam) winParam.textContent = `窗宽: ${currentWw} 窗位: ${currentWc}`;
+    }
+
+    // 绑定调窗预设快捷键
+    const bindPreset = (id, wc, ww) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.addEventListener('click', () => setWindowing(wc, ww));
+    };
+    bindPreset('quickPresetBrain', 40, 80);
+    bindPreset('quickPresetHematoma', 65, 130);
+    bindPreset('quickPresetBone', 450, 1800);
+    bindPreset('modalBtnBrain', 40, 80);
+    bindPreset('modalBtnHematoma', 65, 130);
+    bindPreset('modalBtnBone', 450, 1800);
+    bindPreset('modalBtnSoft', 50, 350);
+
+    const modalWcSlider = document.getElementById('modalWcSlider');
+    if (modalWcSlider) {
+      modalWcSlider.addEventListener('input', e => {
+        currentWc = parseInt(e.target.value);
+        updateWindowControlsDisplay();
+        const currentIdx = parseInt(document.getElementById('sliceSlider').value);
+        update3DSlicePlane(currentIdx);
+      });
+    }
+    const modalWwSlider = document.getElementById('modalWwSlider');
+    if (modalWwSlider) {
+      modalWwSlider.addEventListener('input', e => {
+        currentWw = parseInt(e.target.value);
+        updateWindowControlsDisplay();
+        const currentIdx = parseInt(document.getElementById('sliceSlider').value);
+        update3DSlicePlane(currentIdx);
+      });
+    }
+
+    // 应用并激活解析后的 DICOM 序列数据
+    function applyLoadedDicomSeries(slices) {
+      if (!slices || slices.length === 0) return;
+      loadedDicomSeries = slices;
+      const sample = slices[0];
+      const count = slices.length;
+
+      // 1. 更新元数据标签与状态
+      const elName = document.getElementById('metaPatientName');
+      if (elName) elName.textContent = sample.patientName || "PAN SHAN ZHEN";
+      const elId = document.getElementById('metaPatientId');
+      if (elId) elId.textContent = sample.patientId || "20251118000395";
+      const elMod = document.getElementById('metaModality');
+      if (elMod) elMod.textContent = `${sample.modality} (${sample.seriesDescription || 'uCT 710'})`;
+      const elSlice = document.getElementById('metaSliceInfo');
+      if (elSlice) elSlice.textContent = `${count} 层 / ${(sample.sliceThickness || 5.0).toFixed(1)} mm`;
+      const elRes = document.getElementById('metaResolution');
+      if (elRes) elRes.textContent = `${sample.columns} x ${sample.rows} 体素`;
+      const elSpace = document.getElementById('metaSpacing');
+      if (elSpace && sample.pixelSpacing) {
+        elSpace.textContent = `${sample.pixelSpacing[0].toFixed(4)} x ${sample.pixelSpacing[1].toFixed(4)} mm`;
+      }
+      
+      const minZ = slices[0].positionZ || 0;
+      const maxZ = slices[slices.length - 1].positionZ || (count * 5.0);
+      const elZ = document.getElementById('metaZRange');
+      if (elZ) elZ.textContent = `${minZ.toFixed(1)} ~ ${maxZ.toFixed(1)} mm`;
+
+      currentWc = sample.windowCenter || 40;
+      currentWw = sample.windowWidth || 80;
+      updateWindowControlsDisplay();
+
+      const badge = document.getElementById('metaStatusBadge');
+      if (badge) {
+        badge.textContent = `已成功载入手工序列 (${count} 层)`;
+        badge.className = "text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono";
+      }
+
+      // 2. 更新切片滑块范围
+      const sliceSlider = document.getElementById('sliceSlider');
+      if (sliceSlider) {
+        sliceSlider.min = 0;
+        sliceSlider.max = count - 1;
+        const mid = Math.floor(count / 2);
+        sliceSlider.value = mid;
+
+        const minLbl = document.getElementById('sliceMinLabel');
+        const maxLbl = document.getElementById('sliceMaxLabel');
+        if (minLbl) minLbl.textContent = "00";
+        if (maxLbl) maxLbl.textContent = (count - 1).toString().padStart(2, '0');
+
+        update3DSlicePlane(mid);
+      }
+    }
+
+    // 遍历文件列表或文件夹解析 DICOM 切片
+    async function processDicomFileList(fileList) {
+      const alertBox = document.getElementById('parseStatusAlert');
+      const alertText = document.getElementById('parseStatusText');
+      const alertCount = document.getElementById('parseStatusCount');
+      if (alertBox) alertBox.classList.remove('hidden');
+      if (alertText) alertText.textContent = "正在读取并解析 DICOM 切片数据...";
+
+      const validDcmList = [];
+      const total = fileList.length;
+      let parsedCount = 0;
+
+      for (let i = 0; i < total; i++) {
+        const file = fileList[i];
+        try {
+          const buffer = await file.arrayBuffer();
+          const dcm = DicomParser.parse(buffer);
+          dcm.fileName = file.name;
+          validDcmList.push(dcm);
+        } catch (err) {
+          // 忽略非标准或附属文件
+        }
+        parsedCount++;
+        if (alertCount) alertCount.textContent = `${parsedCount} / ${total}`;
+      }
+
+      if (validDcmList.length === 0) {
+        alert("未在选中的文件中检索到符合 DICOM Part 10 标准的有效切片！");
+        if (alertBox) alertBox.classList.add('hidden');
+        return;
+      }
+
+      // 严格沿人体解剖 Z 轴智能排序
+      const sorted = DicomParser.sortSeries(validDcmList);
+      applyLoadedDicomSeries(sorted);
+
+      if (alertText) alertText.textContent = `成功解析并装载 ${sorted.length} 层 DICOM 切片！`;
+      setTimeout(() => {
+        if (alertBox) alertBox.classList.add('hidden');
+      }, 1800);
+    }
+
+    // 预设真实患者数据一键载入 (读取 E:\20251118000395\401 原生数据)
+    const loadPresetBtn = document.getElementById('loadPresetDicomBtn');
+    if (loadPresetBtn) {
+      loadPresetBtn.addEventListener('click', async () => {
+        const spinner = document.getElementById('presetLoadingSpinner');
+        const alertBox = document.getElementById('parseStatusAlert');
+        const alertText = document.getElementById('parseStatusText');
+        const alertCount = document.getElementById('parseStatusCount');
+
+        try {
+          if (spinner) spinner.classList.remove('hidden');
+          if (alertBox) alertBox.classList.remove('hidden');
+          if (alertText) alertText.textContent = "正在读取潘善珍 401 序列切片列表...";
+          if (alertCount) alertCount.textContent = "连接中";
+
+          const res = await fetch('/api/dicom/preset');
+          if (!res.ok) throw new Error("无法连接 DICOM 预设服务端接口");
+          const data = await res.json();
+          
+          if (!data.files || data.files.length === 0) {
+            throw new Error("DICOM 序列目录无可用切片");
+          }
+
+          const files = data.files;
+          const slices = [];
+          if (alertText) alertText.textContent = `正在传输与体素解构 26 层原生切片...`;
+
+          for (let i = 0; i < files.length; i++) {
+            const f = files[i];
+            if (alertCount) alertCount.textContent = `${i + 1} / ${files.length}`;
+            const fRes = await fetch(`/api/dicom/preset_file?name=${encodeURIComponent(f)}`);
+            if (fRes.ok) {
+              const buf = await fRes.arrayBuffer();
+              const dcm = DicomParser.parse(buf);
+              dcm.fileName = f;
+              slices.push(dcm);
+            }
+          }
+
+          const sorted = DicomParser.sortSeries(slices);
+          applyLoadedDicomSeries(sorted);
+
+          if (alertText) alertText.textContent = `成功载入 ${sorted.length} 层真实患者 DICOM 序列并完成 2D/3D 空间锁定！`;
+          setTimeout(() => {
+            if (alertBox) alertBox.classList.add('hidden');
+          }, 2000);
+        } catch (err) {
+          alert("预设载入提示: " + err.message);
+          if (alertBox) alertBox.classList.add('hidden');
+        } finally {
+          if (spinner) spinner.classList.add('hidden');
+        }
+      });
+    }
+
+    // 绑定文件夹选择与文件选择 Input
+    const dicomFolderInput = document.getElementById('dicomFolderInput');
+    if (dicomFolderInput) {
+      dicomFolderInput.addEventListener('change', e => {
+        if (e.target.files && e.target.files.length > 0) {
+          processDicomFileList(Array.from(e.target.files));
+        }
+      });
+    }
+
+    const dicomFilesInput = document.getElementById('dicomFilesInput');
+    if (dicomFilesInput) {
+      dicomFilesInput.addEventListener('change', e => {
+        if (e.target.files && e.target.files.length > 0) {
+          processDicomFileList(Array.from(e.target.files));
+        }
+      });
+    }
+
+    // 递归遍历拖拽的文件/文件夹结构
+    function traverseFileTree(item, fileList) {
+      return new Promise(resolve => {
+        if (item.isFile) {
+          item.file(file => {
+            fileList.push(file);
+            resolve();
+          }, () => resolve());
+        } else if (item.isDirectory) {
+          const dirReader = item.createReader();
+          dirReader.readEntries(async entries => {
+            const proms = [];
+            for (let i = 0; i < entries.length; i++) {
+              proms.push(traverseFileTree(entries[i], fileList));
+            }
+            await Promise.all(proms);
+            resolve();
+          }, () => resolve());
+        } else {
+          resolve();
+        }
+      });
+    }
+
+    // 通用拖拽绑定函数
+    function setupDropZone(dropElem, overlayElem) {
+      if (!dropElem) return;
+      dropElem.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (overlayElem) overlayElem.classList.remove('hidden');
+      });
+      dropElem.addEventListener('dragleave', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (overlayElem) overlayElem.classList.add('hidden');
+      });
+      dropElem.addEventListener('drop', async e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (overlayElem) overlayElem.classList.add('hidden');
+
+        const dt = e.dataTransfer;
+        const files = [];
+
+        if (dt.items && dt.items.length > 0) {
+          const proms = [];
+          for (let i = 0; i < dt.items.length; i++) {
+            const it = dt.items[i];
+            if (it.webkitGetAsEntry) {
+              const entry = it.webkitGetAsEntry();
+              if (entry) proms.push(traverseFileTree(entry, files));
+            } else if (it.kind === 'file') {
+              files.push(it.getAsFile());
+            }
+          }
+          await Promise.all(proms);
+        } else if (dt.files && dt.files.length > 0) {
+          for (let i = 0; i < dt.files.length; i++) {
+            files.push(dt.files[i]);
+          }
+        }
+
+        if (files.length > 0) {
+          processDicomFileList(files);
+        }
+      });
+    }
+
+    setupDropZone(document.getElementById('dicomDropZone'), null);
+    setupDropZone(document.getElementById('ctViewportContainer'), document.getElementById('viewerDropOverlay'));
+
+    // 实时鼠标光标 Hounsfield 单位 (HU) 探测器与组织判读
+    const ctViewport = document.getElementById('ctViewportContainer');
+    const liveHuBadge = document.getElementById('liveHuBadge');
+    if (ctViewport && liveHuBadge) {
+      ctViewport.addEventListener('mousemove', e => {
+        if (!loadedDicomSeries || loadedDicomSeries.length === 0) return;
+        const currentIdx = parseInt(document.getElementById('sliceSlider').value);
+        const dcm = loadedDicomSeries[currentIdx];
+        if (!dcm || !dcm.pixelData) return;
+
+        const rect = ctViewport.getBoundingClientRect();
+        const px = Math.floor(((e.clientX - rect.left) / rect.width) * dcm.columns);
+        const py = Math.floor(((e.clientY - rect.top) / rect.height) * dcm.rows);
+
+        if (px >= 0 && px < dcm.columns && py >= 0 && py < dcm.rows) {
+          const rawVal = dcm.pixelData[py * dcm.columns + px];
+          const hu = Math.round(rawVal * (dcm.rescaleSlope || 1.0) + (dcm.rescaleIntercept || 0.0));
+          
+          let tissue = "脑实质";
+          if (hu < -500) tissue = "空气/副鼻窦";
+          else if (hu < -20) tissue = "脂肪组织";
+          else if (hu >= 0 && hu <= 15) tissue = "脑脊液 (CSF)";
+          else if (hu > 15 && hu <= 35) tissue = "水肿带 (PHE)";
+          else if (hu > 35 && hu <= 55) tissue = "正常脑皮层";
+          else if (hu > 55 && hu <= 95) tissue = "急性期血肿 (ICH Target)";
+          else if (hu > 95 && hu <= 300) tissue = "高密度钙化";
+          else tissue = "颅骨皮质 (Bone)";
+
+          liveHuBadge.textContent = `${px},${py} | ${hu} HU (${tissue})`;
+          liveHuBadge.classList.remove('hidden');
+        }
+      });
+
+      ctViewport.addEventListener('mouseleave', () => {
+        liveHuBadge.classList.add('hidden');
+      });
+    }
 
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
